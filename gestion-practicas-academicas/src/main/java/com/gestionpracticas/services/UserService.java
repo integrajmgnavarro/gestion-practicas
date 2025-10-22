@@ -36,27 +36,27 @@ public class UserService {
     }
     
     // Obtener todos los usuarios
-    public List<Usuario> obtenerTodosLosUsuarios() {
+    public List<Usuario> getTodosLosUsuarios() {
         return usuarioRepository.findAll();
     }
     
     // Obtener usuario por ID
-    public Optional<Usuario> obtenerUsuarioPorId(Long id) {
+    public Optional<Usuario> getUsuarioPorId(Long id) {
         return usuarioRepository.findById(id);
     }
     
     // Obtener usuario por email
-    public Optional<Usuario> obtenerUsuarioPorEmail(String email) {
+    public Optional<Usuario> getUsuarioPorEmail(String email) {
         return usuarioRepository.findByEmail(email);
     }
     
     // Obtener usuarios por rol
-    public List<Usuario> obtenerUsuariosPorRol(Rol rol) {
+    public List<Usuario> getUsuariosPorRol(Rol rol) {
         return usuarioRepository.findByRol(rol);
     }
     
     // Obtener usuarios activos
-    public List<Usuario> obtenerUsuariosActivos() {
+    public List<Usuario> getUsuariosActivos() {
         return usuarioRepository.findByActivo(true);
     }
     

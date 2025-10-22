@@ -39,6 +39,14 @@ public class Usuario {
     @Column(name = "fechaCreacion", updatable = false)
     private LocalDateTime fechaCreacion;
     
+    @Column(name = "fechaActualizacion")
+    private LocalDateTime fechaActualizacion;
+
+    @PreUpdate
+    protected void onUpdate() {
+        fechaActualizacion = LocalDateTime.now();
+    }
+    
     @PrePersist
     protected void onCreate() {
         fechaCreacion = LocalDateTime.now();
