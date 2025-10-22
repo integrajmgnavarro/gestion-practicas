@@ -1,9 +1,13 @@
 package com.gestionpracticas.models;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -20,55 +24,74 @@ public class Alumno {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Relación con Usuario
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_id", nullable = false, unique = true)
-    private Usuario usuario;
-
-    @Column(length = 50, nullable = false)
+    @NotBlank(message = "El nombre es obligatorio")
+    @Size(max = 50, message = "El nombre no puede exceder 50 caracteres")
+    @Column(nullable = false, length = 50)
     private String nombre;
 
-    @Column(length = 100, nullable = false)
+    @NotBlank(message = "Los apellidos son obligatorios")
+    @Size(max = 100, message = "Los apellidos no pueden exceder 100 caracteres")
+    @Column(nullable = false, length = 100)
     private String apellidos;
 
-    @Column(length = 9, unique = true, nullable = false)
+    @NotBlank(message = "El DNI es obligatorio")
+    @Pattern(regexp = "^[0-9]{8}[A-Z]$", message = "El DNI debe tener 8 números seguidos de una letra mayúscula")
+    @Column(nullable = false, unique = true, length = 9)
     private String dni;
 
+    @NotNull(message = "La fecha de nacimiento es obligatoria")
     @Column(nullable = false)
     private LocalDate fechaNacimiento;
 
-    @Column(length = 100, unique = true, nullable = false)
+    @NotBlank(message = "El email es obligatorio")
+    @Email(message = "El email debe tener un formato válido")
+    @Size(max = 100, message = "El email no puede exceder 100 caracteres")
+    @Column(nullable = false, unique = true, length = 100)
     private String email;
 
+    @Pattern(regexp = "^[0-9]{9,15}$", message = "El teléfono debe tener entre 9 y 15 dígitos")
     @Column(length = 15)
     private String telefono;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cursoId")
-    private Curso curso;
+    private Integer duracionPracticas; // en días
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "empresaId")
-    private Empresa empresa;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tutorPracticasId")
-    private TutorPracticas tutorPracticas;
-
-    private Integer duracionPracticas;
-
+    @Size(max = 200, message = "El horario no puede exceder 200 caracteres")
     @Column(length = 200)
     private String horario;
 
     private LocalDate fechaInicio;
     private LocalDate fechaFin;
 
+    @Column(nullable = false)
     private Boolean activo = true;
 
-    @Column(updatable = false)
+    @CreationTimestamp
+    @Column(name = "fecha_creacion", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
 
+    @UpdateTimestamp
+    @Column(name = "fecha_actualizacion")
     private LocalDateTime fechaActualizacion;
+
+    // Relaciones
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "curso_id")
+    private Curso curso;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "empresa_id")
+    private Empresa empresa;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tutor_practicas_id")
+    private TutorPracticas tutorPracticas;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tutor_curso_id")
+    private TutorCurso tutorCurso;
+
+    @OneToOne(mappedBy = "alumno")
+    private Usuario usuario;
 
     @OneToMany(mappedBy = "alumno", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ObservacionDiaria> observaciones = new ArrayList<>();
@@ -79,14 +102,8 @@ public class Alumno {
     @OneToMany(mappedBy = "alumno", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Evaluacion> evaluaciones = new ArrayList<>();
 
-    @PrePersist
-    protected void onCreate() {
-        fechaCreacion = LocalDateTime.now();
-        if (activo == null) activo = true;
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        fechaActualizacion = LocalDateTime.now();
+    // Método de utilidad
+    public String getNombreCompleto() {
+        return nombre + " " + apellidos;
     }
 }
