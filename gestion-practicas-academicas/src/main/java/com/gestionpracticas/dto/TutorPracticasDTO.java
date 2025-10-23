@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AlumnoDTO {
+public class TutorPracticasDTO {
     private Long id;
     private Long usuarioId;
     private String nombre;
@@ -18,25 +18,14 @@ public class AlumnoDTO {
     private LocalDate fechaNacimiento;
     private String email;
     private String telefono;
+    private String cargo;
+    
+    //Datos Prácticas
+    private String horario;
     
     // Datos de relaciones (solo IDs y nombres básicos)
-    private Long cursoId;
-    private String cursoNombre;
-    
     private Long empresaId;
     private String empresaNombre;
-    
-    private Long tutorPracticasId;
-    private String tutorPracticasNombre;
-    
-    private Long tutorCursoId;
-    private String tutorCursoNombre;
-    
-    // Datos de prácticas
-    private Integer duracionPracticas;
-    private String horario;
-    private LocalDate fechaInicio;
-    private LocalDate fechaFin;
     
     // Metadata
     private Boolean activo;

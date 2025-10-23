@@ -29,6 +29,13 @@ public interface CriterioEvaluacionRepository extends JpaRepository<CriterioEval
 	
 	//Busqueda multicriterio
 	
-	@Query("SELECT cre FROM CriterioEvaluacion cre WHERE ") +
-	
+	@Query("SELECT cre FROM CriterioEvaluacion cre WHERE " +
+			"(:nombre IS NULL OR LOWER(cre.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) AND " +
+			"(:capacidadEvaluacion IS NULL OR cre.capacidadEvaluacion = :capacidadEvaluacion) AND " +
+			"(:activo IS NULL OR cre.activo = :activo)")
+	List<CriterioEvaluacion> findByMultipleCriteria(
+            @Param("nombre") String nombre,
+            @Param("capacidadEvaluacion") Long capacidadEvaluacion,
+            @Param("activo") Boolean activo
+    );	
 }

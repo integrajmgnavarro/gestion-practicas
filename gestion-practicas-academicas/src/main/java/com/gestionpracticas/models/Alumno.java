@@ -53,6 +53,7 @@ public class Alumno {
     @Column(length = 15)
     private String telefono;
 
+    //Datos prácticas
     private Integer duracionPracticas; // en días
 
     @Size(max = 200, message = "El horario no puede exceder 200 caracteres")
@@ -62,6 +63,7 @@ public class Alumno {
     private LocalDate fechaInicio;
     private LocalDate fechaFin;
 
+    //Metadatos
     @Column(nullable = false)
     private Boolean activo = true;
 

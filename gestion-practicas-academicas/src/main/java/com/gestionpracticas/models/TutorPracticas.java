@@ -47,18 +47,16 @@ public class TutorPracticas {
     @Column(length = 15)
     private String telefono;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "empresa_id")
-    private Empresa empresa;
-
     @Size(max = 100, message = "El cargo no puede exceder 100 caracteres")
     @Column(length = 100)
     private String cargo;
 
+    //Datos practicas
     @Size(max = 200, message = "El horario no puede exceder 200 caracteres")
     @Column(length = 200)
     private String horario;
 
+    //Metadatos
     @Column(nullable = false)
     private Boolean activo = true;
 
@@ -71,6 +69,10 @@ public class TutorPracticas {
     private LocalDateTime fechaActualizacion;
 
     // Relaciones
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "empresa_id")
+    private Empresa empresa;
+    
     @OneToMany(mappedBy = "tutorPracticas", cascade = CascadeType.ALL)
     private List<Alumno> alumnos;
 
