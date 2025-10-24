@@ -71,7 +71,7 @@ public interface AlumnoRepository extends JpaRepository<Alumno, Long> {
            "(:dni IS NULL OR a.dni = :dni) AND " +
            "(:cursoId IS NULL OR a.curso.id = :cursoId) AND " +
            "(:empresaId IS NULL OR a.empresa.id = :empresaId) AND " +
-           "(:activo IS NULL OR a.activo = :activo)")
+           "(:activo IS NULL OR a.activo = :activo)")  
     List<Alumno> findByMultipleCriteria(
             @Param("nombre") String nombre,
             @Param("apellidos") String apellidos,
