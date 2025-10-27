@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Evaluaciones - Historial de Progreso</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Bootstrap Icons CDN (Para los iconos originales del código) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <style>
+        /* Configuración de Tailwind para usar la fuente Inter */
+        html { font-family: 'Inter', sans-serif; }
+        
+        /* Estilos personalizados para el acordeón y sombras */
+        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06); }
+        .stat-card { transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1); }
+        
+        /* Estilos para el Acordeón */
+        .accordion-item { border-top: 1px solid #e5e7eb; }
+        .accordion-button {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            text-align: left;
+            background-color: #f9fafb;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .accordion-button:hover { background-color: #f3f4f6; }
+        .accordion-content { overflow: hidden; max-height: 0; transition: max-height 0.3s ease-in-out; padding: 0 1.5rem; }
+        .accordion-content.open { max-height: 1000px; padding: 1rem 1.5rem; }
+    </style>
+</head>
+<body class="bg-gray-50 p-4 sm:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Encabezado de la página -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">
+                    <i class="bi bi-star-fill text-blue-600 mr-2"></i>
+                    Mis Evaluaciones
+                </h1>
+                <p class="text-gray-500 text-sm">Historial de evaluaciones recibidas durante el periodo</p>
+            </div>
+        </div>
+
+        <!-- Resumen de Calificación y Progreso por Criterios -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Columna de Nota Final -->
+            <div class="lg:col-span-1 card-shadow rounded-xl bg-white p-6 text-center">
+                <h6 class="text-sm font-medium text-gray-500 mb-4 uppercase tracking-wider">Nota Final</h6>
+                <div id="final-score" class="text-6xl font-extrabold mb-2" data-score="7.85">-</div>
+                <p class="text-gray-500 mb-4">sobre 10</p>
+                <div class="border-t pt-4">
+                    <h5 id="final-calificacion" class="text-xl font-semibold text-gray-700">Sin evaluar</h5>
+                </div>
+            </div>
+
+            <!-- Columna de Progreso por Criterios -->
+            <div class="lg:col-span-2 card-shadow rounded-xl bg-white">
+                <div class="p-4 border-b">
+                    <h5 class="text-lg font-semibold text-gray-800">
+                        <i class="bi bi-graph-up mr-2 text-blue-600"></i> Progreso por Criterios
+                    </h5>
+                </div>
+                <div class="p-6" id="criterios-container">
+                    <!-- Contenido generado por JavaScript -->
+                    <div class="text-center text-gray-500 py-3">
+                        <p class="mb-0">Cargando progreso...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas Rápidas -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="stat-card rounded-lg bg-white p-4 text-center border">
+                <h6 class="text-xs font-medium text-gray-500 uppercase">Total Evaluaciones</h6>
+                <h3 id="stat-total" class="text-2xl font-bold text-gray-800 mt-1">0</h3>
+            </div>
+            <div class="stat-card rounded-lg bg-white p-4 text-center border border-green-200 bg-green-50">
+                <h6 class="text-xs font-medium text-green-700 uppercase">Aprobadas (>=5.0)</h6>
+                <h3 id="stat-aprobadas" class="text-2xl font-bold text-green-600 mt-1">0</h3>
+            </div>
+            <div class="stat-card rounded-lg bg-white p-4 text-center border border-blue-200 bg-blue-50">
+                <h6 class="text-xs font-medium text-blue-700 uppercase">Última Evaluación</h6>
+                <h3 id="stat-ultima" class="text-2xl font-bold text-blue-600 mt-1">-</h3>
+            </div>
+            <div class="stat-card rounded-lg bg-white p-4 text-center border border-indigo-200 bg-indigo-50">
+                <h6 class="text-xs font-medium text-indigo-700 uppercase">Criterios Únicos</h6>
+                <h3 id="stat-capacidades" class="text-2xl font-bold text-indigo-600 mt-1">0</h3>
+            </div>
+        </div>
+
+        <!-- Tabla de Evaluaciones Detallada (Acordeón) -->
+        <div class="card-shadow rounded-xl bg-white">
+            <div class="p-4 border-b">
+                <h5 class="text-lg font-semibold text-gray-800">
+                    <i class="bi bi-list-check mr-2 text-blue-600"></i> Detalle de Evaluaciones
+                </h5>
+            </div>
+            <div class="p-0" id="accordionEvaluaciones">
+                <!-- Contenido generado por JavaScript -->
+                <div id="no-evaluaciones-placeholder" class="text-center text-gray-500 py-12 hidden">
+                    <i class="bi bi-clipboard-x text-6xl text-gray-300"></i>
+                    <p class="mt-4 text-lg font-medium">Aún no has recibido evaluaciones</p>
+                    <p class="text-sm text-gray-400">Tu tutor de prácticas registrará tus evaluaciones aquí</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. DATOS SIMULADOS (Reemplaza la lógica del backend de Thymeleaf) ---
+        const studentData = {
+            // Nota Final calculada a partir de evaluaciones
+            notaFinal: 7.85, 
+            calificacion: "Notable",
+            
+            // Promedios por Criterio
+            evaluacionesPorCriterio: [
+                { nombre: "Comunicación Técnica", puntuacion: 8.5, puntuacionMaxima: 10 },
+                { nombre: "Resolución de Problemas", puntuacion: 7.0, puntuacionMaxima: 10 },
+                { nombre: "Trabajo en Equipo", puntuacion: 9.0, puntuacionMaxima: 10 },
+                { nombre: "Organización y Planificación", puntuacion: 6.9, puntuacionMaxima: 10 },
+            ],
+            
+            // Detalle de Evaluaciones
+            evaluaciones: [
+                {
+                    capacidadNombre: "Aplicación de Patrones de Diseño",
+                    criterioNombre: "Resolución de Problemas",
+                    fecha: new Date('2025-10-15'),
+                    puntuacion: 7.5,
+                    puntuacionMaxima: 10,
+                    tutorPracticasNombre: "Dr. Elena García",
+                    observaciones: "El patrón Singleton se aplicó correctamente, aunque la documentación podría ser más clara sobre la justificación de su uso."
+                },
+                {
+                    capacidadNombre: "Redacción de Informes",
+                    criterioNombre: "Comunicación Técnica",
+                    fecha: new Date('2025-10-01'),
+                    puntuacion: 9.0,
+                    puntuacionMaxima: 10,
+                    tutorPracticasNombre: "Ing. Javier Ruiz",
+                    observaciones: "Informe bien estructurado y con excelente uso de terminología profesional. Muy buen desempeño en la presentación oral."
+                },
+                {
+                    capacidadNombre: "Gestión de Conflictos",
+                    criterioNombre: "Trabajo en Equipo",
+                    fecha: new Date('2025-09-20'),
+                    puntuacion: 8.0,
+                    puntuacionMaxima: 10,
+                    tutorPracticasNombre: "Dr. Elena García",
+                    observaciones: "Mostró gran capacidad para mediar y llegar a un consenso en situaciones de alta presión."
+                },
+                {
+                    capacidadNombre: "Documentación y Entrega",
+                    criterioNombre: "Organización y Planificación",
+                    fecha: new Date('2025-09-10'),
+                    puntuacion: 4.8,
+                    puntuacionMaxima: 10,
+                    tutorPracticasNombre: "Ing. Javier Ruiz",
+                    observaciones: "Se requiere mejorar la puntualidad en las entregas y la estandarización de los documentos de cierre."
+                }
+            ]
+        };
+
+        // --- 2. Funciones de Ayuda ---
+        const formatDecimal = (num, minFraction = 2, maxFraction = 2) => 
+            num !== null && num !== undefined ? num.toFixed(maxFraction) : '-';
+
+        const formatDate = (date) => {
+            if (!date) return '-';
+            const d = new Date(date);
+            return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+        };
+
+        const getScoreColor = (score, maxScore) => 
+            (score / maxScore) >= 0.5 ? 'text-green-600' : 'text-red-600';
+
+        const getBgColor = (score, maxScore) => 
+            (score / maxScore) >= 0.5 ? 'bg-green-500' : 'bg-red-500';
+
+        // --- 3. Renderizado del Resumen de Calificación ---
+        function renderSummary() {
+            const { notaFinal, calificacion } = studentData;
+
+            const finalScoreEl = document.getElementById('final-score');
+            const finalCalificacionEl = document.getElementById('final-calificacion');
+
+            if (notaFinal !== null) {
+                finalScoreEl.textContent = formatDecimal(notaFinal);
+                finalScoreEl.classList.add(notaFinal >= 5 ? 'text-green-600' : 'text-red-600');
+            } else {
+                finalScoreEl.textContent = '-';
+            }
+
+            if (calificacion) {
+                finalCalificacionEl.textContent = calificacion;
+            } else {
+                finalCalificacionEl.textContent = 'Sin evaluar';
+            }
+        }
+
+        // --- 4. Renderizado del Progreso por Criterios ---
+        function renderCriterios() {
+            const container = document.getElementById('criterios-container');
+            const criterios = studentData.evaluacionesPorCriterio;
+
+            container.innerHTML = ''; // Limpiar contenido
+
+            if (!criterios || criterios.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-gray-500 py-3">
+                        <p class="mb-0">Aún no has sido evaluado en ningún criterio</p>
+                    </div>
+                `;
+                return;
+            }
+
+            criterios.forEach(criterio => {
+                const percentage = (criterio.puntuacion * 100 / criterio.puntuacionMaxima);
+                const progressColor = (criterio.puntuacion / criterio.puntuacionMaxima) >= 0.5 ? 'bg-green-500' : 'bg-red-500';
+
+                const html = `
+                    <div class="mb-4">
+                        <div class="flex justify-between mb-1 text-sm font-medium">
+                            <span class="text-gray-700">${criterio.nombre}</span>
+                            <span>
+                                <strong class="font-bold text-gray-800">${formatDecimal(criterio.puntuacion)}</strong>
+                                / <span class="text-gray-500">${criterio.puntuacionMaxima}</span>
+                            </span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-6">
+                            <div class="h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold ${progressColor}" 
+                                style="width: ${percentage.toFixed(0)}%; min-width: ${percentage > 0 ? '25px' : '0'};">
+                                ${percentage.toFixed(0)}%
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+        }
+        
+        // --- 5. Renderizado de Estadísticas Rápidas ---
+        function renderStats() {
+            const { evaluaciones, evaluacionesPorCriterio } = studentData;
+            
+            const total = evaluaciones.length;
+            const aprobadas = evaluaciones.filter(e => (e.puntuacion / e.puntuacionMaxima) >= 0.5).length;
+            
+            // Buscar la última fecha de evaluación
+            const ultima = evaluaciones.length > 0 
+                ? evaluaciones.sort((a, b) => b.fecha - a.fecha)[0].fecha 
+                : null;
+
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-aprobadas').textContent = aprobadas;
+            document.getElementById('stat-ultima').textContent = ultima ? formatDate(ultima).substring(0, 5) : '-'; // DD/MM
+            document.getElementById('stat-capacidades').textContent = evaluacionesPorCriterio.length;
+        }
+
+
+        // --- 6. Renderizado del Detalle (Acordeón) ---
+        function renderDetailedEvaluations() {
+            const container = document.getElementById('accordionEvaluaciones');
+            const evaluaciones = studentData.evaluaciones;
+            container.innerHTML = '';
+
+            if (evaluaciones.length === 0) {
+                document.getElementById('no-evaluaciones-placeholder').classList.remove('hidden');
+                return;
+            }
+
+            evaluaciones.forEach((evaluacion, index) => {
+                const id = `eval-${index}`;
+                const scoreClass = getScoreColor(evaluacion.puntuacion, evaluacion.puntuacionMaxima);
+                const bgColor = getBgColor(evaluacion.puntuacion, evaluacion.puntuacionMaxima);
+                const percentage = (evaluacion.puntuacion * 100 / evaluacion.puntuacionMaxima).toFixed(0);
+
+                const html = `
+                    <div class="accordion-item" id="${id}-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button group" type="button" aria-expanded="false" data-target="#${id}-content">
+                                <div class="flex justify-between items-center w-full mr-3">
+                                    <div class="min-w-0 pr-4">
+                                        <strong class="text-base text-gray-800 group-hover:text-blue-600 transition-colors">${evaluacion.capacidadNombre}</strong>
+                                        <div class="text-xs text-gray-500 mt-1">
+                                            <span class="mr-1">${evaluacion.criterioNombre}</span> 
+                                            <span class="inline-block mx-1 text-gray-300">•</span>
+                                            <span class="mr-1">${formatDate(evaluacion.fecha)}</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right flex-shrink-0">
+                                        <h4 class="text-2xl font-bold mb-0 ${scoreClass}">${formatDecimal(evaluacion.puntuacion)}</h4>
+                                        <small class="text-gray-500">/ ${evaluacion.puntuacionMaxima}</small>
+                                    </div>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="${id}-content" class="accordion-content">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="border p-4 rounded-lg bg-gray-50">
+                                    <h6 class="text-sm font-semibold text-gray-600 mb-3">Información</h6>
+                                    <p class="text-sm mb-1">
+                                        <strong class="font-medium text-gray-800">Evaluado por:</strong> 
+                                        <span class="text-gray-600">${evaluacion.tutorPracticasNombre}</span>
+                                    </p>
+                                    <p class="text-sm mb-1">
+                                        <strong class="font-medium text-gray-800">Fecha:</strong> 
+                                        <span class="text-gray-600">${formatDate(evaluacion.fecha)}</span>
+                                    </p>
+                                    <p class="text-sm mb-1">
+                                        <strong class="font-medium text-gray-800">Criterio:</strong> 
+                                        <span class="text-gray-600">${evaluacion.criterioNombre}</span>
+                                    </p>
+                                </div>
+                                <div class="border p-4 rounded-lg bg-gray-50">
+                                    <h6 class="text-sm font-semibold text-gray-600 mb-3">Puntuación</h6>
+                                    <div class="w-full bg-gray-200 rounded-full h-8 mb-2">
+                                        <div class="h-8 rounded-full flex items-center justify-center text-white font-bold text-base ${bgColor}" 
+                                            style="width: ${percentage}%; min-width: ${percentage > 0 ? '30px' : '0'};">
+                                            ${percentage}%
+                                        </div>
+                                    </div>
+                                    <p class="text-center text-sm">
+                                        <strong class="text-gray-800">${formatDecimal(evaluacion.puntuacion)}</strong>
+                                        / <span class="text-gray-500">${evaluacion.puntuacionMaxima}</span> puntos
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 pt-4 border-t">
+                                <h6 class="text-sm font-semibold text-gray-600 mb-2">
+                                    <i class="bi bi-chat-left-quote mr-2"></i> Observaciones del Tutor
+                                </h6>
+                                ${evaluacion.observaciones ? `
+                                    <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+                                        <p class="mb-0">${evaluacion.observaciones}</p>
+                                    </div>
+                                ` : `
+                                    <p class="text-sm text-gray-500 mb-0">Sin observaciones adicionales</p>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+            
+            // Adjuntar listener para el acordeón
+            document.querySelectorAll('.accordion-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const content = document.querySelector(button.dataset.target);
+                    const isExpanded = button.getAttribute('aria-expanded') === 'true';
+
+                    // Cerrar todos los demás
+                    document.querySelectorAll('.accordion-content.open').forEach(openContent => {
+                        if (openContent !== content) {
+                            openContent.classList.remove('open');
+                            openContent.closest('.accordion-item').querySelector('.accordion-button').setAttribute('aria-expanded', 'false');
+                        }
+                    });
+
+                    // Abrir/Cerrar el actual
+                    if (!isExpanded) {
+                        content.classList.add('open');
+                        button.setAttribute('aria-expanded', 'true');
+                    } else {
+                        content.classList.remove('open');
+                        button.setAttribute('aria-expanded', 'false');
+                    }
+                });
+            });
+        }
+
+
+        // --- 7. Inicialización ---
+        window.onload = function() {
+            // Ordenar evaluaciones por fecha (más reciente primero)
+            studentData.evaluaciones.sort((a, b) => b.fecha - a.fecha);
+            
+            renderSummary();
+            renderCriterios();
+            renderStats();
+            renderDetailedEvaluations();
+        };
+
+    </script>
+</body>
+</html>

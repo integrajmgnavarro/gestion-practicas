@@ -16,8 +16,8 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class AlumnoService {
-    
+public class AlumnoService { // Implementar la interfaz
+
     private final AlumnoRepository alumnoRepository;
     private final UsuarioRepository usuarioRepository;
     private final CursoRepository cursoRepository;
@@ -25,6 +25,10 @@ public class AlumnoService {
     private final TutorPracticasRepository tutorPracticasRepository;
     private final PasswordEncoder passwordEncoder;
     
+    // Repositorios añadidos para los nuevos métodos estadísticos
+    private final EvaluacionRepository evaluacionRepository;
+    private final ObservacionDiariaRepository observacionDiariaRepository;
+
     @Transactional
     public AlumnoDTO createAlumno(AlumnoCreateDTO createDTO) {
         // Validaciones
@@ -68,7 +72,7 @@ public class AlumnoService {
         
         // Asignar rol ALUMNO
         user.setRol(Usuario.Rol.ALUMNO);
-       
+        
         user = usuarioRepository.save(user);
         
         // Crear Alumno
@@ -88,6 +92,7 @@ public class AlumnoService {
         alumno.setFechaInicio(createDTO.getFechaInicio());
         alumno.setFechaFin(createDTO.getFechaFin());
         alumno.setActivo(true);
+        alumno.setContratado(createDTO.getContratado() != null ? createDTO.getContratado() : false);
         
         alumno = alumnoRepository.save(alumno);
         
@@ -114,7 +119,7 @@ public class AlumnoService {
     
     @Transactional(readOnly = true)
     public AlumnoDTO getAlumnoByUsuarioId(Long usuarioId) {
-        Alumno alumno = alumnoRepository.findByUsuarioId(usuarioId)
+        Alumno alumno = alumnoRepository.findByUsuario_Id(usuarioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Alumno no encontrado para el usuario: " + usuarioId));
         return convertToDTO(alumno);
     }
@@ -128,28 +133,28 @@ public class AlumnoService {
     
     @Transactional(readOnly = true)
     public List<AlumnoDTO> getAlumnosByCurso(Long cursoId) {
-        return alumnoRepository.findByCursoId(cursoId).stream()
+        return alumnoRepository.findByCurso_Id(cursoId).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
     
     @Transactional(readOnly = true)
     public List<AlumnoDTO> getAlumnosByEmpresa(Long empresaId) {
-        return alumnoRepository.findByEmpresaId(empresaId).stream()
+        return alumnoRepository.findByEmpresa_Id(empresaId).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
     
     @Transactional(readOnly = true)
     public List<AlumnoDTO> getAlumnosByTutorPracticas(Long tutorPracticasId) {
-        return alumnoRepository.findByTutorPracticasId(tutorPracticasId).stream()
+        return alumnoRepository.findByTutorPracticas_Id(tutorPracticasId).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
     
     @Transactional(readOnly = true)
     public List<AlumnoDTO> getAlumnosByTutorCurso(Long tutorCursoId) {
-        return alumnoRepository.findByTutorCursoId(tutorCursoId).stream()
+        return alumnoRepository.findByTutorCurso_Id(tutorCursoId).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -241,6 +246,9 @@ public class AlumnoService {
             }
             alumno.setFechaFin(updateDTO.getFechaFin());
         }
+        if (updateDTO.getContratado() != null) {
+            alumno.setContratado(updateDTO.getContratado());
+        }
         if (updateDTO.getActivo() != null) {
             alumno.setActivo(updateDTO.getActivo());
             // Actualizar también el estado del usuario
@@ -289,6 +297,48 @@ public class AlumnoService {
         return convertToDTO(alumno);
     }
     
+    // ==========================================================
+    // --- IMPLEMENTACIÓN DE MÉTODOS ESTADÍSTICOS (NUEVOS) ---
+    // ==========================================================
+    
+    /**
+     * Calcula la nota media del alumno consultando el EvaluacionRepository.
+     * Si no hay evaluaciones, retorna 0.0.
+     * @param alumnoId ID del alumno.
+     * @return Nota media calculada.
+     */
+    @Transactional(readOnly = true)
+    public Double calcularNotaMedia(Long alumnoId) {
+        // Asunción: EvaluacionRepository tiene un método para calcular el promedio por alumno.
+        return evaluacionRepository.findAveragePuntuacionByAlumnoId(alumnoId).orElse(0.0);
+    }
+
+    /**
+     * Cuenta el número total de evaluaciones realizadas al alumno.
+     * @param alumnoId ID del alumno.
+     * @return Número total de evaluaciones.
+     */
+    @Transactional(readOnly = true)
+    public Long contarEvaluaciones(Long alumnoId) {
+        // Asunción: EvaluacionRepository tiene un método para contar por alumno.
+        return evaluacionRepository.countByAlumnoId(alumnoId);
+    }
+
+    /**
+     * Cuenta el número total de observaciones diarias registradas por el alumno.
+     * @param alumnoId ID del alumno.
+     * @return Número total de observaciones.
+     */
+    @Transactional(readOnly = true)
+    public Long contarObservaciones(Long alumnoId) {
+        // Asunción: ObservacionDiariaRepository tiene un método para contar por alumno.
+        return observacionDiariaRepository.countByAlumnoId(alumnoId);
+    }
+
+    // ==========================================================
+    // --- MÉTODOS HELPER ---
+    // ==========================================================
+    
     // Método helper para validaciones
     private void validarDatosUnicos(String dni, String email, Long alumnoId) {
         // Validar DNI único
@@ -310,13 +360,18 @@ public class AlumnoService {
     private AlumnoDTO convertToDTO(Alumno alumno) {
         AlumnoDTO dto = new AlumnoDTO();
         dto.setId(alumno.getId());
-        dto.setUsuarioId(alumno.getUsuario().getId());
+        
+        // 💡 CORRECCIÓN APLICADA: Se verifica que el objeto Usuario no sea nulo antes de acceder a su ID.
+        Usuario usuario = alumno.getUsuario();
+        dto.setUsuarioId(usuario != null ? usuario.getId() : null); 
+        
         dto.setNombre(alumno.getNombre());
         dto.setApellidos(alumno.getApellidos());
         dto.setDni(alumno.getDni());
         dto.setFechaNacimiento(alumno.getFechaNacimiento());
         dto.setEmail(alumno.getEmail());
         dto.setTelefono(alumno.getTelefono());
+        dto.setContratado(alumno.getContratado());
         
         // Datos de relaciones
         if (alumno.getCurso() != null) {
@@ -332,19 +387,27 @@ public class AlumnoService {
         if (alumno.getTutorPracticas() != null) {
             dto.setTutorPracticasId(alumno.getTutorPracticas().getId());
             dto.setTutorPracticasNombre(alumno.getTutorPracticas().getNombre() + " " + 
-                                        alumno.getTutorPracticas().getApellidos());
+                                         alumno.getTutorPracticas().getApellidos());
+        }
+
+        // Faltaba el tutor de curso en el mapeo, lo añado para completar el DTO
+        if (alumno.getTutorCurso() != null) {
+            dto.setTutorCursoId(alumno.getTutorCurso().getId());
+            dto.setTutorCursoNombre(alumno.getTutorCurso().getNombre() + " " + 
+                                      alumno.getTutorCurso().getApellidos());
         }
         
         // Datos de prácticas
         dto.setDuracionPracticas(alumno.getDuracionPracticas());
         dto.setHorario(alumno.getHorario());
         dto.setFechaInicio(alumno.getFechaInicio()); 
-dto.setFechaFin(alumno.getFechaFin());
-    // Metadata
-    dto.setActivo(alumno.getActivo());
-    dto.setFechaCreacion(alumno.getFechaCreacion());
-    dto.setFechaActualizacion(alumno.getFechaActualizacion());
-    
-    return dto;
-}
+        dto.setFechaFin(alumno.getFechaFin());
+        
+        // Metadata
+        dto.setActivo(alumno.getActivo());
+        dto.setFechaCreacion(alumno.getFechaCreacion());
+        dto.setFechaActualizacion(alumno.getFechaActualizacion());
+        
+        return dto;
+    }
 }

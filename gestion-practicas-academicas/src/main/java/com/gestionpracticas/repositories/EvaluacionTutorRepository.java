@@ -21,8 +21,9 @@ public interface EvaluacionTutorRepository extends JpaRepository<EvaluacionTutor
     // =============================
 
     List<EvaluacionTutor> findByTutorPracticas(TutorPracticas tutorPracticas);
-
     List<EvaluacionTutor> findByTutorCurso(TutorCurso tutorCurso);
+    List<EvaluacionTutor> findByTutorPracticas_Id(Long tutorPracticasId);
+    List<EvaluacionTutor> findByTutorCurso_Id(Long tutorCursoId);
 
     List<EvaluacionTutor> findByFecha(LocalDate fecha);
 
@@ -47,7 +48,7 @@ public interface EvaluacionTutorRepository extends JpaRepository<EvaluacionTutor
     @Query("SELECT et FROM EvaluacionTutor et " +
            "LEFT JOIN FETCH et.tutorCurso " +
            "WHERE et.tutorPracticas.id = :tutorPracticasId")
-    List<EvaluacionTutor> findByTutorPracticasIdWithRelations(@Param("tutorPracticasId") Long tutorPracticasId);
+    List<EvaluacionTutor> findByTutorPracticas_IdWithRelations(@Param("tutorPracticasId") Long tutorPracticasId);
 
     // =============================
     // 🔹 AGREGADOS / ESTADÍSTICAS

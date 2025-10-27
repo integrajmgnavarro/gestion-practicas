@@ -19,12 +19,9 @@ public class EstadisticasService {
 
     private final AlumnoRepository alumnoRepository;
     private final EvaluacionRepository evaluacionRepository;
-    private final EvaluacionTutorRepository evaluacionTutorRepository;
     private final CursoRepository cursoRepository;
     private final EmpresaRepository empresaRepository;
     private final TutorPracticasRepository tutorPracticasRepository;
-    private final ObservacionDiariaRepository observacionDiariaRepository;
-    private final IncidenciaRepository incidenciaRepository;
 
     // ========================= ESTADÍSTICAS GENERALES ========================= //
 
@@ -32,75 +29,90 @@ public class EstadisticasService {
     public EstadisticasGeneralesDTO getEstadisticasGenerales() {
         EstadisticasGeneralesDTO stats = new EstadisticasGeneralesDTO();
         
-        // Contadores básicos
-        stats.setTotalAlumnos(alumnoRepository.count());
-        stats.setTotalEmpresas(empresaRepository.count());
-        stats.setTotalCursos(cursoRepository.count());
-        stats.setTotalTutoresPracticas(tutorPracticasRepository.count());
+        // Tasa de aprobados por curso
+        stats.setTasaAprobadosPorCurso(calcularTasaAprobadosPorCurso());
         
-        // Alumnos activos
-        stats.setAlumnosActivos(alumnoRepository.countByActivoTrue());
+        // Notas medias por empresa
+        stats.setNotasMediasPorEmpresa(calcularNotasMediasPorEmpresa());
         
-        // Alumnos en prácticas (con fechas válidas)
-        stats.setAlumnosEnPracticas(alumnoRepository.countByFechaInicioIsNotNullAndFechaFinIsNotNullAndActivoTrue());
+        // Notas medias por tutor
+        stats.setNotasMediasPorTutor(calcularNotasMediasPorTutor());
+        
+        // Distribución de calificaciones
+        stats.setDistribucionCalificaciones(calcularDistribucionCalificaciones());
+        
+        // Tiempo medio de prácticas
+        EstadisticasDuracion duracion = calcularEstadisticasDuracion();
+        stats.setDuracionMediaDias(duracion.getMedia());
+        stats.setDuracionMinimaDias(duracion.getMinima());
+        stats.setDuracionMaximaDias(duracion.getMaxima());
         
         return stats;
     }
 
+    // ========================= ESTADÍSTICAS DE EMPLEABILIDAD ========================= //
+
     @Transactional(readOnly = true)
-    public EstadisticasAprobadosDTO getEstadisticasAprobados() {
-        EstadisticasAprobadosDTO stats = new EstadisticasAprobadosDTO();
+    public EstadisticasEmpleabilidadDTO getEstadisticasEmpleabilidad() {
+        EstadisticasEmpleabilidadDTO stats = new EstadisticasEmpleabilidadDTO();
         
-        List<Alumno> alumnos = alumnoRepository.findAll();
-        int totalEvaluados = 0;
-        int aprobados = 0;
+        // Alumnos finalizados (con fecha fin en el pasado)
+        List<Alumno> alumnosFinalizados = alumnoRepository.findByFechaFinIsNotNull().stream()
+                .filter(a -> a.getFechaFin().isBefore(LocalDate.now()) || a.getFechaFin().isEqual(LocalDate.now()))
+                .collect(Collectors.toList());
         
-        for (Alumno alumno : alumnos) {
-            List<Evaluacion> evaluaciones = evaluacionRepository.findByAlumnoId(alumno.getId());
-            if (!evaluaciones.isEmpty()) {
-                totalEvaluados++;
-                BigDecimal notaFinal = calcularNotaFinalAlumno(alumno.getId());
-                if (notaFinal.compareTo(BigDecimal.valueOf(5.0)) >= 0) {
-                    aprobados++;
-                }
-            }
-        }
+        stats.setTotalAlumnosFinalizados(alumnosFinalizados.size());
         
-        stats.setTotalEvaluados(totalEvaluados);
-        stats.setAprobados(aprobados);
-        stats.setSuspendidos(totalEvaluados - aprobados);
+        // Alumnos contratados
+        long contratados = alumnosFinalizados.stream()
+                .filter(a -> a.getContratado() != null && a.getContratado())
+                .count();
         
-        if (totalEvaluados > 0) {
-            BigDecimal porcentaje = BigDecimal.valueOf(aprobados)
-                    .divide(BigDecimal.valueOf(totalEvaluados), 4, RoundingMode.HALF_UP)
-                    .multiply(BigDecimal.valueOf(100));
-            stats.setPorcentajeAprobados(porcentaje.setScale(2, RoundingMode.HALF_UP));
+        stats.setAlumnosContratados((int) contratados);
+        
+        // Porcentaje de contratación
+        if (alumnosFinalizados.size() > 0) {
+            BigDecimal porcentaje = BigDecimal.valueOf(contratados)
+                    .divide(BigDecimal.valueOf(alumnosFinalizados.size()), 4, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100))
+                    .setScale(2, RoundingMode.HALF_UP);
+            stats.setPorcentajeContratacion(porcentaje);
         } else {
-            stats.setPorcentajeAprobados(BigDecimal.ZERO);
+            stats.setPorcentajeContratacion(BigDecimal.ZERO);
         }
+        
+        // Empresas que más contratan
+        stats.setEmpresasQueMasContratan(calcularEmpresasQueMasContratan(alumnosFinalizados));
+        
+        // Evolución temporal de contrataciones
+        stats.setEvolucionTemporal(calcularEvolucionContrataciones(alumnosFinalizados));
+        
+        // Correlación notas-contratación
+        stats.setCorrelacionNotasContratacion(calcularCorrelacionNotasContratacion(alumnosFinalizados));
         
         return stats;
     }
 
-    @Transactional(readOnly = true)
-    public List<EstadisticasPorCursoDTO> getEstadisticasPorCurso() {
-        List<EstadisticasPorCursoDTO> estadisticas = new ArrayList<>();
+    // ========================= MÉTODOS PRIVADOS - ESTADÍSTICAS GENERALES ========================= //
+
+    private List<EstadisticasItemDTO> calcularTasaAprobadosPorCurso() {
+        List<EstadisticasItemDTO> estadisticas = new ArrayList<>();
         List<Curso> cursos = cursoRepository.findAll();
         
         for (Curso curso : cursos) {
-            EstadisticasPorCursoDTO stats = new EstadisticasPorCursoDTO();
-            stats.setCursoId(curso.getId());
-            stats.setCursoNombre(curso.getNombre());
+            List<Alumno> alumnos = alumnoRepository.findByCurso_Id(curso.getId());
             
-            List<Alumno> alumnos = alumnoRepository.findByCursoId(curso.getId());
-            stats.setTotalAlumnos(alumnos.size());
+            EstadisticasItemDTO item = new EstadisticasItemDTO();
+            item.setId(curso.getId());
+            item.setNombre(curso.getNombre());
+            item.setTotalAlumnos(alumnos.size());
             
             int evaluados = 0;
             int aprobados = 0;
             BigDecimal sumaNotas = BigDecimal.ZERO;
             
             for (Alumno alumno : alumnos) {
-                List<Evaluacion> evaluaciones = evaluacionRepository.findByAlumnoId(alumno.getId());
+                List<Evaluacion> evaluaciones = evaluacionRepository.findByAlumno_Id(alumno.getId());
                 if (!evaluaciones.isEmpty()) {
                     evaluados++;
                     BigDecimal nota = calcularNotaFinalAlumno(alumno.getId());
@@ -111,323 +123,282 @@ public class EstadisticasService {
                 }
             }
             
-            stats.setAlumnosEvaluados(evaluados);
-            stats.setAprobados(aprobados);
-            stats.setSuspendidos(evaluados - aprobados);
+            item.setAprobados(aprobados);
+            item.setSuspendidos(evaluados - aprobados);
             
             if (evaluados > 0) {
-                stats.setNotaMedia(sumaNotas.divide(BigDecimal.valueOf(evaluados), 2, RoundingMode.HALF_UP));
-                BigDecimal porcentaje = BigDecimal.valueOf(aprobados)
+                item.setNotaMedia(sumaNotas.divide(BigDecimal.valueOf(evaluados), 2, RoundingMode.HALF_UP));
+                BigDecimal tasa = BigDecimal.valueOf(aprobados)
                         .divide(BigDecimal.valueOf(evaluados), 4, RoundingMode.HALF_UP)
-                        .multiply(BigDecimal.valueOf(100));
-                stats.setPorcentajeAprobados(porcentaje.setScale(2, RoundingMode.HALF_UP));
+                        .multiply(BigDecimal.valueOf(100))
+                        .setScale(2, RoundingMode.HALF_UP);
+                item.setTasaAprobados(tasa);
             } else {
-                stats.setNotaMedia(BigDecimal.ZERO);
-                stats.setPorcentajeAprobados(BigDecimal.ZERO);
+                item.setNotaMedia(BigDecimal.ZERO);
+                item.setTasaAprobados(BigDecimal.ZERO);
             }
             
-            estadisticas.add(stats);
+            estadisticas.add(item);
         }
         
         return estadisticas;
     }
 
-    @Transactional(readOnly = true)
-    public List<EstadisticasPorEmpresaDTO> getEstadisticasPorEmpresa() {
-        List<EstadisticasPorEmpresaDTO> estadisticas = new ArrayList<>();
+    private List<EstadisticasItemDTO> calcularNotasMediasPorEmpresa() {
+        List<EstadisticasItemDTO> estadisticas = new ArrayList<>();
         List<Empresa> empresas = empresaRepository.findAll();
         
         for (Empresa empresa : empresas) {
-            EstadisticasPorEmpresaDTO stats = new EstadisticasPorEmpresaDTO();
-            stats.setEmpresaId(empresa.getId());
-            stats.setEmpresaNombre(empresa.getNombre());
+            List<Alumno> alumnos = alumnoRepository.findByEmpresa_Id(empresa.getId());
             
-            List<Alumno> alumnos = alumnoRepository.findByEmpresaId(empresa.getId());
-            stats.setTotalAlumnos(alumnos.size());
+            EstadisticasItemDTO item = new EstadisticasItemDTO();
+            item.setId(empresa.getId());
+            item.setNombre(empresa.getNombre());
+            item.setTotalAlumnos(alumnos.size());
             
             int evaluados = 0;
-            int aprobados = 0;
             BigDecimal sumaNotas = BigDecimal.ZERO;
             
             for (Alumno alumno : alumnos) {
-                List<Evaluacion> evaluaciones = evaluacionRepository.findByAlumnoId(alumno.getId());
+                List<Evaluacion> evaluaciones = evaluacionRepository.findByAlumno_Id(alumno.getId());
                 if (!evaluaciones.isEmpty()) {
                     evaluados++;
                     BigDecimal nota = calcularNotaFinalAlumno(alumno.getId());
                     sumaNotas = sumaNotas.add(nota);
-                    if (nota.compareTo(BigDecimal.valueOf(5.0)) >= 0) {
-                        aprobados++;
-                    }
                 }
             }
             
-            stats.setAlumnosEvaluados(evaluados);
-            stats.setAprobados(aprobados);
-            stats.setSuspendidos(evaluados - aprobados);
-            
             if (evaluados > 0) {
-                stats.setNotaMedia(sumaNotas.divide(BigDecimal.valueOf(evaluados), 2, RoundingMode.HALF_UP));
+                item.setNotaMedia(sumaNotas.divide(BigDecimal.valueOf(evaluados), 2, RoundingMode.HALF_UP));
             } else {
-                stats.setNotaMedia(BigDecimal.ZERO);
+                item.setNotaMedia(BigDecimal.ZERO);
             }
             
-            // Contar tutores de la empresa
-            stats.setTotalTutores(tutorPracticasRepository.countByEmpresaId(empresa.getId()));
-            
-            estadisticas.add(stats);
+            estadisticas.add(item);
         }
+        
+        // Ordenar por nota media descendente
+        estadisticas.sort((a, b) -> b.getNotaMedia().compareTo(a.getNotaMedia()));
         
         return estadisticas;
     }
 
-    @Transactional(readOnly = true)
-    public List<EstadisticasPorTutorDTO> getEstadisticasPorTutor() {
-        List<EstadisticasPorTutorDTO> estadisticas = new ArrayList<>();
+    private List<EstadisticasItemDTO> calcularNotasMediasPorTutor() {
+        List<EstadisticasItemDTO> estadisticas = new ArrayList<>();
         List<TutorPracticas> tutores = tutorPracticasRepository.findAll();
         
         for (TutorPracticas tutor : tutores) {
-            EstadisticasPorTutorDTO stats = new EstadisticasPorTutorDTO();
-            stats.setTutorId(tutor.getId());
-            stats.setTutorNombre(tutor.getNombre() + " " + tutor.getApellidos());
+            List<Alumno> alumnos = alumnoRepository.findByTutorPracticas_Id(tutor.getId());
             
-            if (tutor.getEmpresa() != null) {
-                stats.setEmpresaNombre(tutor.getEmpresa().getNombre());
-            }
-            
-            List<Alumno> alumnos = alumnoRepository.findByTutorPracticasId(tutor.getId());
-            stats.setTotalAlumnos(alumnos.size());
+            EstadisticasItemDTO item = new EstadisticasItemDTO();
+            item.setId(tutor.getId());
+            item.setNombre(tutor.getNombre() + " " + tutor.getApellidos());
+            item.setTotalAlumnos(alumnos.size());
             
             int evaluados = 0;
-            int aprobados = 0;
             BigDecimal sumaNotas = BigDecimal.ZERO;
             
             for (Alumno alumno : alumnos) {
-                List<Evaluacion> evaluaciones = evaluacionRepository.findByAlumnoId(alumno.getId());
+                List<Evaluacion> evaluaciones = evaluacionRepository.findByAlumno_Id(alumno.getId());
                 if (!evaluaciones.isEmpty()) {
                     evaluados++;
                     BigDecimal nota = calcularNotaFinalAlumno(alumno.getId());
                     sumaNotas = sumaNotas.add(nota);
-                    if (nota.compareTo(BigDecimal.valueOf(5.0)) >= 0) {
-                        aprobados++;
-                    }
                 }
             }
             
-            stats.setAlumnosEvaluados(evaluados);
-            stats.setAprobados(aprobados);
-            
             if (evaluados > 0) {
-                stats.setNotaMedia(sumaNotas.divide(BigDecimal.valueOf(evaluados), 2, RoundingMode.HALF_UP));
+                item.setNotaMedia(sumaNotas.divide(BigDecimal.valueOf(evaluados), 2, RoundingMode.HALF_UP));
             } else {
-                stats.setNotaMedia(BigDecimal.ZERO);
+                item.setNotaMedia(BigDecimal.ZERO);
             }
             
-            // Promedio de evaluaciones del tutor
-            List<EvaluacionTutor> evaluacionesTutor = evaluacionTutorRepository.findByTutorPracticasId(tutor.getId());
-            if (!evaluacionesTutor.isEmpty()) {
-                BigDecimal sumaEvaluaciones = evaluacionesTutor.stream()
-                        .map(EvaluacionTutor::getPuntuacion)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
-                stats.setEvaluacionPromedio(sumaEvaluaciones.divide(
-                        BigDecimal.valueOf(evaluacionesTutor.size()), 2, RoundingMode.HALF_UP));
-            } else {
-                stats.setEvaluacionPromedio(BigDecimal.ZERO);
-            }
-            
-            estadisticas.add(stats);
+            estadisticas.add(item);
         }
+        
+        // Ordenar por nota media descendente
+        estadisticas.sort((a, b) -> b.getNotaMedia().compareTo(a.getNotaMedia()));
         
         return estadisticas;
     }
 
-    // ========================= DISTRIBUCIÓN DE CALIFICACIONES ========================= //
-
-    @Transactional(readOnly = true)
-    public DistribucionCalificacionesDTO getDistribucionCalificaciones() {
-        DistribucionCalificacionesDTO distribucion = new DistribucionCalificacionesDTO();
+    private Map<String, Integer> calcularDistribucionCalificaciones() {
+        Map<String, Integer> distribucion = new LinkedHashMap<>();
+        distribucion.put("Sobresaliente (9-10)", 0);
+        distribucion.put("Notable (7-8.99)", 0);
+        distribucion.put("Bien (6-6.99)", 0);
+        distribucion.put("Suficiente (5-5.99)", 0);
+        distribucion.put("Insuficiente (<5)", 0);
         
         List<Alumno> alumnos = alumnoRepository.findAll();
-        int sobresaliente = 0; // >= 9
-        int notable = 0;        // >= 7 y < 9
-        int bien = 0;           // >= 6 y < 7
-        int suficiente = 0;     // >= 5 y < 6
-        int insuficiente = 0;   // < 5
         
         for (Alumno alumno : alumnos) {
-            List<Evaluacion> evaluaciones = evaluacionRepository.findByAlumnoId(alumno.getId());
+            List<Evaluacion> evaluaciones = evaluacionRepository.findByAlumno_Id(alumno.getId());
             if (!evaluaciones.isEmpty()) {
                 BigDecimal nota = calcularNotaFinalAlumno(alumno.getId());
                 
                 if (nota.compareTo(BigDecimal.valueOf(9.0)) >= 0) {
-                    sobresaliente++;
+                    distribucion.put("Sobresaliente (9-10)", distribucion.get("Sobresaliente (9-10)") + 1);
                 } else if (nota.compareTo(BigDecimal.valueOf(7.0)) >= 0) {
-                    notable++;
+                    distribucion.put("Notable (7-8.99)", distribucion.get("Notable (7-8.99)") + 1);
                 } else if (nota.compareTo(BigDecimal.valueOf(6.0)) >= 0) {
-                    bien++;
+                    distribucion.put("Bien (6-6.99)", distribucion.get("Bien (6-6.99)") + 1);
                 } else if (nota.compareTo(BigDecimal.valueOf(5.0)) >= 0) {
-                    suficiente++;
+                    distribucion.put("Suficiente (5-5.99)", distribucion.get("Suficiente (5-5.99)") + 1);
                 } else {
-                    insuficiente++;
+                    distribucion.put("Insuficiente (<5)", distribucion.get("Insuficiente (<5)") + 1);
                 }
             }
         }
-        
-        distribucion.setSobresaliente(sobresaliente);
-        distribucion.setNotable(notable);
-        distribucion.setBien(bien);
-        distribucion.setSuficiente(suficiente);
-        distribucion.setInsuficiente(insuficiente);
         
         return distribucion;
     }
 
-    // ========================= ESTADÍSTICAS DE DURACIÓN ========================= //
-
-    @Transactional(readOnly = true)
-    public EstadisticasDuracionDTO getEstadisticasDuracion() {
-        EstadisticasDuracionDTO stats = new EstadisticasDuracionDTO();
-        
-        List<Alumno> alumnos = alumnoRepository.findByFechaInicioIsNotNullAndFechaFinIsNotNull();
+    private EstadisticasDuracion calcularEstadisticasDuracion() {
+        List<Alumno> alumnos = alumnoRepository.findByDuracionPracticasIsNotNull();
         
         if (alumnos.isEmpty()) {
-            stats.setDuracionMedia(0);
-            stats.setDuracionMinima(0);
-            stats.setDuracionMaxima(0);
-            return stats;
+            return new EstadisticasDuracion(0, 0, 0);
         }
         
-        List<Integer> duraciones = new ArrayList<>();
+        List<Integer> duraciones = alumnos.stream()
+                .map(Alumno::getDuracionPracticas)
+                .collect(Collectors.toList());
         
-        for (Alumno alumno : alumnos) {
-            if (alumno.getDuracionPracticas() != null) {
-                duraciones.add(alumno.getDuracionPracticas());
+        int suma = duraciones.stream().mapToInt(Integer::intValue).sum();
+        int media = suma / duraciones.size();
+        int minima = Collections.min(duraciones);
+        int maxima = Collections.max(duraciones);
+        
+        return new EstadisticasDuracion(media, minima, maxima);
+    }
+
+    // ========================= MÉTODOS PRIVADOS - EMPLEABILIDAD ========================= //
+
+    private List<EstadisticasItemDTO> calcularEmpresasQueMasContratan(List<Alumno> alumnosFinalizados) {
+        // Agrupar por empresa y contar contratados
+        Map<Long, EmpresaContratacion> empresasMap = new HashMap<>();
+        
+        for (Alumno alumno : alumnosFinalizados) {
+            if (alumno.getEmpresa() != null) {
+                Long empresaId = alumno.getEmpresa().getId();
+                
+                empresasMap.putIfAbsent(empresaId, 
+                    new EmpresaContratacion(
+                        empresaId, 
+                        alumno.getEmpresa().getNombre(), 
+                        0, 
+                        0
+                    )
+                );
+                
+                EmpresaContratacion ec = empresasMap.get(empresaId);
+                ec.totalAlumnos++;
+                
+                if (alumno.getContratado() != null && alumno.getContratado()) {
+                    ec.contratados++;
+                }
             }
         }
         
-        if (!duraciones.isEmpty()) {
-            double media = duraciones.stream()
-                    .mapToInt(Integer::intValue)
-                    .average()
-                    .orElse(0.0);
-            
-            stats.setDuracionMedia((int) Math.round(media));
-            stats.setDuracionMinima(Collections.min(duraciones));
-            stats.setDuracionMaxima(Collections.max(duraciones));
-        } else {
-            stats.setDuracionMedia(0);
-            stats.setDuracionMinima(0);
-            stats.setDuracionMaxima(0);
-        }
+        // Convertir a EstadisticasItemDTO
+        List<EstadisticasItemDTO> resultado = empresasMap.values().stream()
+                .map(ec -> {
+                    EstadisticasItemDTO item = new EstadisticasItemDTO();
+                    item.setId(ec.empresaId);
+                    item.setNombre(ec.empresaNombre);
+                    item.setTotalAlumnos(ec.totalAlumnos);
+                    item.setContratados(ec.contratados);
+                    return item;
+                })
+                .sorted((a, b) -> b.getContratados().compareTo(a.getContratados()))
+                .collect(Collectors.toList());
         
-        return stats;
+        return resultado;
     }
 
-    // ========================= ESTADÍSTICAS DE INCIDENCIAS ========================= //
-
-    @Transactional(readOnly = true)
-    public EstadisticasIncidenciasDTO getEstadisticasIncidencias() {
-        EstadisticasIncidenciasDTO stats = new EstadisticasIncidenciasDTO();
+    private List<EvolucionContratacionDTO> calcularEvolucionContrataciones(List<Alumno> alumnosFinalizados) {
+        // Agrupar contrataciones por año y mes de fecha fin
+        Map<String, Integer> evolucionMap = new TreeMap<>();
         
-        List<Incidencia> incidencias = incidenciaRepository.findAll();
-        
-        stats.setTotalIncidencias(incidencias.size());
-        stats.setIncidenciasAbiertas(incidenciaRepository.countByEstado("ABIERTA"));
-        stats.setIncidenciasEnProceso(incidenciaRepository.countByEstado("EN_PROCESO"));
-        stats.setIncidenciasResueltas(incidenciaRepository.countByEstado("RESUELTA"));
-        
-        // Incidencias por tipo
-        Map<String, Long> porTipo = incidencias.stream()
-                .collect(Collectors.groupingBy(Incidencia::getTipo, Collectors.counting()));
-        
-        stats.setIncidenciasPorTipo(porTipo);
-        
-        return stats;
-    }
-
-    // ========================= ESTADÍSTICAS DE OBSERVACIONES ========================= //
-
-    @Transactional(readOnly = true)
-    public EstadisticasObservacionesDTO getEstadisticasObservaciones() {
-        EstadisticasObservacionesDTO stats = new EstadisticasObservacionesDTO();
-        
-        stats.setTotalObservaciones(observacionDiariaRepository.count());
-        
-        // Observaciones del mes actual
-        LocalDate inicioMes = LocalDate.now().withDayOfMonth(1);
-        LocalDate finMes = LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth());
-        
-        stats.setObservacionesMesActual(
-                observacionDiariaRepository.countByFechaBetween(inicioMes, finMes));
-        
-        // Promedio de horas trabajadas
-        List<ObservacionDiaria> observaciones = observacionDiariaRepository.findAll();
-        
-        if (!observaciones.isEmpty()) {
-            int totalHoras = observaciones.stream()
-                    .filter(obs -> obs.getHorasRealizadas() != null)
-                    .mapToInt(ObservacionDiaria::getHorasRealizadas)
-                    .sum();
-            
-            long observacionesConHoras = observaciones.stream()
-                    .filter(obs -> obs.getHorasRealizadas() != null)
-                    .count();
-            
-            if (observacionesConHoras > 0) {
-                stats.setPromedioHorasDiarias(
-                        BigDecimal.valueOf(totalHoras)
-                                .divide(BigDecimal.valueOf(observacionesConHoras), 2, RoundingMode.HALF_UP));
-            } else {
-                stats.setPromedioHorasDiarias(BigDecimal.ZERO);
+        for (Alumno alumno : alumnosFinalizados) {
+            if (alumno.getContratado() != null && alumno.getContratado() && alumno.getFechaFin() != null) {
+                String periodo = alumno.getFechaFin().getYear() + "-" + 
+                                String.format("%02d", alumno.getFechaFin().getMonthValue());
+                evolucionMap.put(periodo, evolucionMap.getOrDefault(periodo, 0) + 1);
             }
-        } else {
-            stats.setPromedioHorasDiarias(BigDecimal.ZERO);
         }
         
-        return stats;
+        // Convertir a DTO
+        List<EvolucionContratacionDTO> resultado = new ArrayList<>();
+        for (Map.Entry<String, Integer> entry : evolucionMap.entrySet()) {
+            String[] partes = entry.getKey().split("-");
+            EvolucionContratacionDTO dto = new EvolucionContratacionDTO();
+            dto.setAnio(Integer.parseInt(partes[0]));
+            dto.setMes(Integer.parseInt(partes[1]));
+            dto.setContrataciones(entry.getValue());
+            dto.setPeriodo(entry.getKey());
+            resultado.add(dto);
+        }
+        
+        return resultado;
     }
 
-    // ========================= RANKING DE ALUMNOS ========================= //
-
-    @Transactional(readOnly = true)
-    public List<RankingAlumnoDTO> getRankingAlumnos(Integer limite) {
-        List<Alumno> alumnos = alumnoRepository.findAll();
-        List<RankingAlumnoDTO> ranking = new ArrayList<>();
+    private BigDecimal calcularCorrelacionNotasContratacion(List<Alumno> alumnosFinalizados) {
+        List<BigDecimal> notas = new ArrayList<>();
+        List<Integer> contratados = new ArrayList<>();
         
-        for (Alumno alumno : alumnos) {
-            List<Evaluacion> evaluaciones = evaluacionRepository.findByAlumnoId(alumno.getId());
+        for (Alumno alumno : alumnosFinalizados) {
+            List<Evaluacion> evaluaciones = evaluacionRepository.findByAlumno_Id(alumno.getId());
             if (!evaluaciones.isEmpty()) {
-                RankingAlumnoDTO item = new RankingAlumnoDTO();
-                item.setAlumnoId(alumno.getId());
-                item.setAlumnoNombre(alumno.getNombre() + " " + alumno.getApellidos());
-                item.setNotaFinal(calcularNotaFinalAlumno(alumno.getId()));
-                
-                if (alumno.getCurso() != null) {
-                    item.setCursoNombre(alumno.getCurso().getNombre());
-                }
-                
-                if (alumno.getEmpresa() != null) {
-                    item.setEmpresaNombre(alumno.getEmpresa().getNombre());
-                }
-                
-                ranking.add(item);
+                BigDecimal nota = calcularNotaFinalAlumno(alumno.getId());
+                notas.add(nota);
+                contratados.add((alumno.getContratado() != null && alumno.getContratado()) ? 1 : 0);
             }
         }
         
-        // Ordenar por nota descendente
-        ranking.sort((a, b) -> b.getNotaFinal().compareTo(a.getNotaFinal()));
-        
-        // Limitar resultados si se especifica
-        if (limite != null && limite > 0 && ranking.size() > limite) {
-            return ranking.subList(0, limite);
+        if (notas.size() < 2) {
+            return BigDecimal.ZERO;
         }
         
-        return ranking;
+        // Calcular coeficiente de correlación de Pearson
+        double mediaNotas = notas.stream()
+                .mapToDouble(BigDecimal::doubleValue)
+                .average()
+                .orElse(0.0);
+        
+        double mediaContratados = contratados.stream()
+                .mapToInt(Integer::intValue)
+                .average()
+                .orElse(0.0);
+        
+        double numerador = 0.0;
+        double denominador1 = 0.0;
+        double denominador2 = 0.0;
+        
+        for (int i = 0; i < notas.size(); i++) {
+            double difNota = notas.get(i).doubleValue() - mediaNotas;
+            double difContratado = contratados.get(i) - mediaContratados;
+            
+            numerador += difNota * difContratado;
+            denominador1 += difNota * difNota;
+            denominador2 += difContratado * difContratado;
+        }
+        
+        double denominador = Math.sqrt(denominador1 * denominador2);
+        
+        if (denominador == 0.0) {
+            return BigDecimal.ZERO;
+        }
+        
+        double correlacion = numerador / denominador;
+        return BigDecimal.valueOf(correlacion).setScale(4, RoundingMode.HALF_UP);
     }
 
-    // ========================= MÉTODOS PRIVADOS ========================= //
+    // ========================= MÉTODO AUXILIAR PARA CALCULAR NOTA FINAL ========================= //
 
     private BigDecimal calcularNotaFinalAlumno(Long alumnoId) {
-        List<Evaluacion> evaluaciones = evaluacionRepository.findByAlumnoId(alumnoId);
+        List<Evaluacion> evaluaciones = evaluacionRepository.findByAlumno_Id(alumnoId);
         
         if (evaluaciones.isEmpty()) {
             return BigDecimal.ZERO;
@@ -452,5 +423,37 @@ public class EstadisticasService {
         }
 
         return notaTotal;
+    }
+
+    // ========================= CLASES AUXILIARES INTERNAS ========================= //
+
+    private static class EstadisticasDuracion {
+        private final Integer media;
+        private final Integer minima;
+        private final Integer maxima;
+
+        public EstadisticasDuracion(Integer media, Integer minima, Integer maxima) {
+            this.media = media;
+            this.minima = minima;
+            this.maxima = maxima;
+        }
+
+        public Integer getMedia() { return media; }
+        public Integer getMinima() { return minima; }
+        public Integer getMaxima() { return maxima; }
+    }
+
+    private static class EmpresaContratacion {
+        private final Long empresaId;
+        private final String empresaNombre;
+        private int totalAlumnos;
+        private int contratados;
+
+        public EmpresaContratacion(Long empresaId, String empresaNombre, int totalAlumnos, int contratados) {
+            this.empresaId = empresaId;
+            this.empresaNombre = empresaNombre;
+            this.totalAlumnos = totalAlumnos;
+            this.contratados = contratados;
+        }
     }
 }

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{common/layout}">
+<head>
+    <title>Gestión de Alumnos</title>
+	
+	<!-- Carga del CDN de Tailwind CSS para el ejemplo (Normalmente iría en el layout principal) -->
+	<script src="https://cdn.tailwindcss.com"></script>
+
+	<!-- Bloque para CSS extra, si es necesario, inyectado en el layout principal -->
+	<th:block layout:fragment="extra-css">
+	    <!-- Puedes añadir estilos CSS personalizados aquí si las clases de Tailwind no son suficientes -->
+	</th:block>
+</head>
+<body>
+    <div layout:fragment="content">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-people-fill text-primary"></i>
+                    Gestión de Alumnos
+                </h1>
+                <p class="text-muted mb-0">Listado completo de alumnos del sistema</p>
+            </div>
+            <div>
+                <a th:href="@{/admin/alumnos/nuevo}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Nuevo Alumno
+                </a>
+            </div>
+        </div>
+
+        <!-- Filtros y Búsqueda -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form th:action="@{/admin/alumnos}" method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" class="form-control" name="nombre" placeholder="Buscar por nombre...">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Apellidos</label>
+                        <input type="text" class="form-control" name="apellidos" placeholder="Buscar por apellidos...">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">DNI</label>
+                        <input type="text" class="form-control" name="dni" placeholder="DNI...">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Estado</label>
+                        <select class="form-select" name="activo">
+                            <option value="">Todos</option>
+                            <option value="true">Activos</option>
+                            <option value="false">Inactivos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Buscar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Estadísticas rápidas -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">Total Alumnos</h6>
+                        <h3 th:text="${alumnos?.size() ?: 0}">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card success">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">Activos</h6>
+                        <h3 th:text="${alumnos != null ? #lists.size(alumnos.?[activo]) : 0}">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card warning">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">Con Empresa</h6>
+                        <h3 th:text="${alumnos != null ? #lists.size(alumnos.?[empresaId != null]) : 0}">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card danger">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">Sin Asignar</h6>
+                        <h3 th:text="${alumnos != null ? #lists.size(alumnos.?[empresaId == null]) : 0}">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Alumnos -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-table"></i> Lista de Alumnos
+                </h5>
+                <div>
+                    <button class="btn btn-sm btn-outline-success" onclick="exportarExcel()">
+                        <i class="bi bi-file-earmark-excel"></i> Exportar
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div th:if="${#lists.isEmpty(alumnos)}" class="text-center text-muted py-5">
+                    <i class="bi bi-inbox" style="font-size: 4rem;"></i>
+                    <p class="mt-3 mb-0">No hay alumnos registrados</p>
+                    <a th:href="@{/admin/alumnos/nuevo}" class="btn btn-primary mt-3">
+                        <i class="bi bi-plus-circle"></i> Crear Primer Alumno
+                    </a>
+                </div>
+
+                <div class="table-responsive" th:if="${!#lists.isEmpty(alumnos)}">
+                    <table class="table table-hover align-middle" id="tablaAlumnos">
+                        <thead>
+                            <tr>
+                                <th>DNI</th>
+                                <th>Nombre Completo</th>
+                                <th>Email</th>
+                                <th>Curso</th>
+                                <th>Empresa</th>
+                                <th>Estado</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="alumno : ${alumnos}">
+                                <td>
+                                    <span class="badge bg-secondary" th:text="${alumno.dni}">DNI</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-circle bg-primary text-white me-2">
+                                            <span th:text="${#strings.substring(alumno.nombre, 0, 1)}">A</span>
+                                        </div>
+                                        <div>
+                                            <strong th:text="${alumno.nombre + ' ' + alumno.apellidos}">Nombre</strong>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <small th:text="${alumno.email}">email@example.com</small>
+                                </td>
+                                <td>
+                                    <span th:if="${alumno.cursoNombre}" th:text="${alumno.cursoNombre}">Curso</span>
+                                    <span th:unless="${alumno.cursoNombre}" class="text-muted">-</span>
+                                </td>
+                                <td>
+                                    <span th:if="${alumno.empresaNombre}">
+                                        <i class="bi bi-building"></i>
+                                        <span th:text="${alumno.empresaNombre}">Empresa</span>
+                                    </span>
+                                    <span th:unless="${alumno.empresaNombre}" class="text-muted">Sin asignar</span>
+                                </td>
+                                <td>
+                                    <span th:if="${alumno.activo}" class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Activo
+                                    </span>
+                                    <span th:unless="${alumno.activo}" class="badge bg-secondary">
+                                        <i class="bi bi-x-circle"></i> Inactivo
+                                    </span>
+                                </td>
+                                <td class="text-end table-actions">
+                                    <div class="btn-group" role="group">
+                                        <a th:href="@{/admin/alumnos/{id}(id=${alumno.id})}" 
+                                           class="btn btn-sm btn-outline-info"
+                                           title="Ver detalle">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a th:href="@{/admin/alumnos/{id}/editar(id=${alumno.id})}" 
+                                           class="btn btn-sm btn-outline-primary"
+                                           title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" 
+                                                class="btn btn-sm btn-outline-danger"
+                                                onclick="confirmarEliminar('[[${alumno.id}]]', '[[${alumno.nombre}]]')"
+                                                title="Eliminar">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de confirmación de eliminación -->
+        <div class="modal fade" id="modalEliminar" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-exclamation-triangle"></i> Confirmar Eliminación
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>¿Estás seguro de que deseas eliminar al alumno <strong id="nombreAlumno"></strong>?</p>
+                        <p class="text-danger">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            Esta acción no se puede deshacer y eliminará todos los datos asociados.
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <form id="formEliminar" method="post" style="display: inline;">
+                            <input type="hidden" name="_method" value="delete">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Extra CSS -->
+    <th:block layout:fragment="extra-css">
+        <style>
+            .avatar-circle {
+                width: 35px;
+                height: 35px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+            }
+        </style>
+    </th:block>
+
+    <!-- Extra JS -->
+    <th:block layout:fragment="extra-js">
+        <script th:inline="javascript">
+            function confirmarEliminar(id, nombre) {
+                document.getElementById('nombreAlumno').textContent = nombre;
+                document.getElementById('formEliminar').action = '/admin/alumnos/' + id;
+                new bootstrap.Modal(document.getElementById('modalEliminar')).show();
+            }
+
+            function exportarExcel() {
+                window.location.href = '/reportes/exportar/todos-alumnos?formato=excel';
+            }
+        </script>
+    </th:block>
+</body>
+</html>

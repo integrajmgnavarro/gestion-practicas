@@ -20,11 +20,17 @@ public interface ObservacionDiariaRepository extends JpaRepository<ObservacionDi
 
     List<ObservacionDiaria> findByAlumno(Alumno alumno);
 
-    List<ObservacionDiaria> findByAlumnoId(Long alumnoId);
+    List<ObservacionDiaria> findByAlumno_Id(Long alumnoId);
 
     List<ObservacionDiaria> findByFecha(LocalDate fecha);
 
     List<ObservacionDiaria> findByFechaBetween(LocalDate inicio, LocalDate fin);
+
+    // 💡 Método para contar el número de observaciones diarias de un alumno.
+    Long countByAlumnoId(Long alumnoId);
+
+    // Puedes añadir otros métodos específicos si los necesitas, como:
+    // List<ObservacionDiaria> findByAlumnoIdOrderByFechaCreacionDesc(Long alumnoId);
 
     // =============================
     // 🔹 RELACIONES / FETCH
@@ -45,7 +51,7 @@ public interface ObservacionDiariaRepository extends JpaRepository<ObservacionDi
            "LEFT JOIN FETCH od.alumno " +
            "WHERE od.alumno.id = :alumnoId " +
            "ORDER BY od.fecha DESC")
-    List<ObservacionDiaria> findByAlumnoIdWithAlumno(@Param("alumnoId") Long alumnoId);
+    List<ObservacionDiaria> findByAlumno_IdWithAlumno(@Param("alumnoId") Long alumnoId);
 
     // =============================
     // 🔹 AGREGADOS / CONTADORES
@@ -59,31 +65,4 @@ public interface ObservacionDiariaRepository extends JpaRepository<ObservacionDi
 
     @Query("SELECT COUNT(od) FROM ObservacionDiaria od WHERE od.fecha BETWEEN :inicio AND :fin")
     Long countByRangoFechas(@Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
-
-    // =============================
-    // 🔹 BÚSQUEDA MULTICRITERIO
-    // =============================
-    /**
-     * Búsqueda flexible por alumno, rango de fechas, horas realizadas y contenido textual.
-     * Si un parámetro es NULL, no se aplica ese filtro.
-     */
-    @Query("SELECT od FROM ObservacionDiaria od WHERE " +
-           "(:alumnoId IS NULL OR od.alumno.id = :alumnoId) AND " +
-           "(:fechaInicio IS NULL OR od.fecha >= :fechaInicio) AND " +
-           "(:fechaFin IS NULL OR od.fecha <= :fechaFin) AND " +
-           "(:horasMin IS NULL OR od.horasRealizadas >= :horasMin) AND " +
-           "(:horasMax IS NULL OR od.horasRealizadas <= :horasMax) AND " +
-           "(:texto IS NULL OR " +
-           "LOWER(od.actividades) LIKE LOWER(CONCAT('%', :texto, '%')) OR " +
-           "LOWER(od.explicaciones) LIKE LOWER(CONCAT('%', :texto, '%')) OR " +
-           "LOWER(od.observacionesAlumno) LIKE LOWER(CONCAT('%', :texto, '%')) OR " +
-           "LOWER(od.observacionesTutor) LIKE LOWER(CONCAT('%', :texto, '%')))")
-    List<ObservacionDiaria> findByMultipleCriteria(
-            @Param("alumnoId") Long alumnoId,
-            @Param("fechaInicio") LocalDate fechaInicio,
-            @Param("fechaFin") LocalDate fechaFin,
-            @Param("horasMin") Integer horasMin,
-            @Param("horasMax") Integer horasMax,
-            @Param("texto") String texto
-    );
 }

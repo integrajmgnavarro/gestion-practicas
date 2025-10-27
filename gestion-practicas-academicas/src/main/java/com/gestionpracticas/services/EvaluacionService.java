@@ -2,7 +2,7 @@ package com.gestionpracticas.services;
 
 import com.gestionpracticas.dto.*;
 import com.gestionpracticas.exception.ResourceNotFoundException;
-import com.gestionpracticas.exception.DuplicateResourceException;
+import java.math.RoundingMode;
 import com.gestionpracticas.models.*;
 import com.gestionpracticas.repositories.*;
 import lombok.RequiredArgsConstructor;
@@ -116,7 +116,7 @@ public class EvaluacionService {
 
     @Transactional(readOnly = true)
     public List<CapacidadEvaluacionDTO> getCapacidadesByCriterioId(Long criterioId) {
-        return capacidadEvaluacionRepository.findByCriterioId(criterioId).stream()
+        return capacidadEvaluacionRepository.findByCriterio_Id(criterioId).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -195,21 +195,21 @@ public class EvaluacionService {
 
     @Transactional(readOnly = true)
     public List<EvaluacionDTO> getEvaluacionesByAlumnoId(Long alumnoId) {
-        return evaluacionRepository.findByAlumnoId(alumnoId).stream()
+        return evaluacionRepository.findByAlumno_Id(alumnoId).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<EvaluacionDTO> getEvaluacionesByTutorPracticasId(Long tutorId) {
-        return evaluacionRepository.findByTutorPracticasId(tutorId).stream()
+        return evaluacionRepository.findByTutorPracticas_Id(tutorId).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public BigDecimal calcularNotaFinalAlumno(Long alumnoId) {
-        List<Evaluacion> evaluaciones = evaluacionRepository.findByAlumnoId(alumnoId);
+        List<Evaluacion> evaluaciones = evaluacionRepository.findByAlumno_Id(alumnoId);
         
         if (evaluaciones.isEmpty()) {
             return BigDecimal.ZERO;
@@ -223,10 +223,10 @@ public class EvaluacionService {
             CriterioEvaluacion criterio = eval.getCapacidad().getCriterio();
             BigDecimal peso = criterio.getPeso();
             BigDecimal puntuacionNormalizada = eval.getPuntuacion()
-                    .divide(BigDecimal.valueOf(eval.getCapacidad().getPuntuacionMaxima()), 2, BigDecimal.ROUND_HALF_UP)
+            		.divide(BigDecimal.valueOf(eval.getCapacidad().getPuntuacionMaxima()), 2, RoundingMode.HALF_UP)
                     .multiply(BigDecimal.TEN);
             
-            notaTotal = notaTotal.add(puntuacionNormalizada.multiply(peso).divide(BigDecimal.valueOf(100), 2, BigDecimal.ROUND_HALF_UP));
+            notaTotal = notaTotal.add(puntuacionNormalizada.multiply(peso).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
             pesoTotal = pesoTotal.add(peso);
         }
 
@@ -301,15 +301,20 @@ public class EvaluacionService {
     }
 
     @Transactional(readOnly = true)
-    public List<EvaluacionTutorDTO> getEvaluacionesByTutorPracticasId(Long tutorPracticasId) {
-        return evaluacionTutorRepository.findByTutorPracticasId(tutorPracticasId).stream()
+    public List<EvaluacionTutorDTO> getEvaluacionesTutorByTutorPracticasId(Long tutorPracticasId) {
+        return evaluacionTutorRepository.findByTutorPracticas(
+            tutorPracticasRepository.findById(tutorPracticasId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tutor no encontrado"))
+        ).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public List<EvaluacionTutorDTO> getEvaluacionesByTutorCursoId(Long tutorCursoId) {
-        return evaluacionTutorRepository.findByTutorCursoId(tutorCursoId).stream()
+    public List<EvaluacionTutorDTO> getEvaluacionesTutorByTutorCursoId(Long tutorCursoId) {
+        TutorCurso tutor = tutorCursoRepository.findById(tutorCursoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tutor de curso no encontrado"));
+        return evaluacionTutorRepository.findByTutorCurso(tutor).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }

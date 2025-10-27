@@ -22,6 +22,9 @@ public interface IncidenciaRepository extends JpaRepository<Incidencia, Long> {
     // =============================
 
     List<Incidencia> findByAlumno(Alumno alumno);
+    List<Incidencia> findByAlumno_Id(Long alumnoId);
+    long countByAlumnoId(Long alumnoId);
+
 
     List<Incidencia> findByTutorPracticas(TutorPracticas tutorPracticas);
 
@@ -53,7 +56,7 @@ public interface IncidenciaRepository extends JpaRepository<Incidencia, Long> {
            "LEFT JOIN FETCH i.tutorPracticas " +
            "WHERE i.alumno.id = :alumnoId " +
            "ORDER BY i.fecha DESC")
-    List<Incidencia> findByAlumnoIdWithRelations(@Param("alumnoId") Long alumnoId);
+    List<Incidencia> findByAlumno_IdWithRelations(@Param("alumnoId") Long alumnoId);
 
     // =============================
     // 🔹 AGREGADOS / ESTADÍSTICAS

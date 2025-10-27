@@ -22,16 +22,27 @@ public interface EvaluacionRepository extends JpaRepository<Evaluacion, Long> {
     // =============================
 
     List<Evaluacion> findByAlumno(Alumno alumno);
-    List<Evaluacion> findByAlumnoId(Long alumnoId);
+    List<Evaluacion> findByAlumno_Id(Long alumnoId);
     
     List<Evaluacion> findByCapacidad(CapacidadEvaluacion capacidad);
 
     List<Evaluacion> findByTutorPracticas(TutorPracticas tutorPracticas);
-    List<Evaluacion> findByTutorPracticasId(Long tutorPracticasId);
+    List<Evaluacion> findByTutorPracticas_Id(Long tutorPracticasId);
 
     List<Evaluacion> findByFecha(LocalDate fecha);
 
     List<Evaluacion> findByFechaBetween(LocalDate inicio, LocalDate fin);
+    
+
+    // 💡 Método para calcular la nota(llamafda puntuacion en el proyecto) media de las evaluaciones de un alumno.
+    @Query("SELECT AVG(e.puntuacion) FROM Evaluacion e WHERE e.alumno.id = :alumnoId")
+    Optional<Double> findAveragePuntuacionByAlumnoId(@Param("alumnoId") Long alumnoId);
+
+    // 💡 Método para contar el número de evaluaciones de un alumno.
+    Long countByAlumnoId(Long alumnoId);
+
+    // Puedes añadir otros métodos específicos si los necesitas, como:
+    // List<Evaluacion> findByAlumnoIdOrderByFechaCreacionDesc(Long alumnoId);
 
     // =============================
     // 🔹 RELACIONES / FETCH
@@ -54,7 +65,7 @@ public interface EvaluacionRepository extends JpaRepository<Evaluacion, Long> {
            "LEFT JOIN FETCH e.capacidad " +
            "LEFT JOIN FETCH e.tutorPracticas " +
            "WHERE e.alumno.id = :alumnoId")
-    List<Evaluacion> findByAlumnoIdWithRelations(@Param("alumnoId") Long alumnoId);
+    List<Evaluacion> findByAlumno_IdWithRelations(@Param("alumnoId") Long alumnoId);
 
     // =============================
     // 🔹 AGREGADOS / ESTADÍSTICAS

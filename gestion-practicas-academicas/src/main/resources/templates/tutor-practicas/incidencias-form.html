@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Nueva Incidencia - Tutor Prácticas</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons (similar to Bootstrap Icons) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-warning': '#f59e0b',
+                        'primary-danger': '#ef4444',
+                        'primary-success': '#10b981',
+                        'gray-light': '#f9fafb',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        .icon {
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 0.5rem;
+        }
+        .card {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-light min-h-screen p-4 sm:p-8 font-sans">
+
+    <!-- Main Content Container -->
+    <div class="max-w-7xl mx-auto">
+
+        <!-- Page Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b pb-4">
+            <div class="mb-4 sm:mb-0">
+                <h1 class="text-3xl font-extrabold text-gray-900 flex items-center">
+                    <i data-lucide="alert-triangle" class="icon w-8 h-8 text-primary-warning"></i>
+                    Registrar Nueva Incidencia
+                </h1>
+                <p class="text-gray-500 mt-1">Documenta un problema o situación con un alumno</p>
+            </div>
+            <div>
+                <a href="#" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-100 transition duration-150">
+                    <i data-lucide="arrow-left" class="icon w-4 h-4"></i> Volver
+                </a>
+            </div>
+        </div>
+
+        <!-- Formulario -->
+        <form action="#" method="post" class="space-y-6">
+            
+            <!-- Hidden field mock -->
+            <input type="hidden" id="tutorPracticasId" value="T123">
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- Columna Izquierda: Datos Básicos -->
+                <div class="space-y-6">
+                    <div class="card bg-white rounded-xl overflow-hidden">
+                        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                            <h5 class="text-lg font-semibold text-gray-800 flex items-center">
+                                <i data-lucide="info" class="icon w-5 h-5"></i> Datos Básicos
+                            </h5>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            
+                            <!-- Alumno -->
+                            <div>
+                                <label for="alumnoId" class="block text-sm font-medium text-gray-700">
+                                    Alumno <span class="text-primary-danger">*</span>
+                                </label>
+                                <select id="alumnoId" 
+                                        name="alumnoId"
+                                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-warning focus:border-primary-warning sm:text-sm rounded-lg"
+                                        onchange="cargarHistorialIncidencias()"
+                                        required>
+                                    <option value="">Seleccionar alumno...</option>
+                                    <!-- Options will be populated by JS -->
+                                </select>
+                            </div>
+
+                            <!-- Fecha -->
+                            <div>
+                                <label for="fecha" class="block text-sm font-medium text-gray-700">
+                                    Fecha de la Incidencia <span class="text-primary-danger">*</span>
+                                </label>
+                                <input type="date"
+                                       class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-warning focus:border-primary-warning sm:text-sm rounded-lg"
+                                       id="fecha"
+                                       name="fecha"
+                                       required>
+                            </div>
+
+                            <!-- Tipo de Incidencia -->
+                            <div>
+                                <label for="tipo" class="block text-sm font-medium text-gray-700">
+                                    Tipo de Incidencia <span class="text-primary-danger">*</span>
+                                </label>
+                                <select id="tipo" 
+                                        name="tipo"
+                                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-warning focus:border-primary-warning sm:text-sm rounded-lg"
+                                        onchange="mostrarInfoTipo()"
+                                        required>
+                                    <option value="">Seleccionar tipo...</option>
+                                    <option value="FALTA">Falta</option>
+                                    <option value="RETRASO">Retraso</option>
+                                    <option value="PROBLEMA_ACTITUD">Problema de Actitud</option>
+                                    <option value="OTROS">Otros</option>
+                                </select>
+                                
+                                <!-- Info según tipo -->
+                                <div id="infoTipo" class="p-3 mt-2 rounded-lg bg-blue-100 text-blue-700 text-sm hidden">
+                                    <small id="infoTipoTexto"></small>
+                                </div>
+                            </div>
+
+                            <!-- Estado Inicial -->
+                            <div>
+                                <label for="estado" class="block text-sm font-medium text-gray-700">
+                                    Estado Inicial
+                                </label>
+                                <select id="estado" 
+                                        name="estado"
+                                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-warning focus:border-primary-warning sm:text-sm rounded-lg">
+                                    <option value="ABIERTA" selected>Abierta</option>
+                                    <option value="EN_PROCESO">En Proceso</option>
+                                    <option value="RESUELTA">Resuelta</option>
+                                </select>
+                                <p class="mt-1 text-xs text-gray-500">Por defecto se crea como "Abierta"</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Historial de incidencias del alumno -->
+                    <div id="historialCard" class="card bg-white rounded-xl overflow-hidden hidden">
+                        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                            <h6 class="text-base font-semibold text-gray-800 flex items-center">
+                                <i data-lucide="history" class="icon w-4 h-4"></i> Historial de Incidencias
+                            </h6>
+                        </div>
+                        <div class="p-6" id="historialContent">
+                            <p class="text-gray-500 text-sm">Selecciona un alumno para ver su historial</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna Derecha: Descripción y Detalles -->
+                <div>
+                    <div class="card bg-white rounded-xl overflow-hidden">
+                        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                            <h5 class="text-lg font-semibold text-gray-800 flex items-center">
+                                <i data-lucide="file-text" class="icon w-5 h-5"></i> Descripción y Detalles
+                            </h5>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            
+                            <!-- Descripción -->
+                            <div>
+                                <label for="descripcion" class="block text-sm font-medium text-gray-700">
+                                    Descripción de la Incidencia <span class="text-primary-danger">*</span>
+                                </label>
+                                <textarea id="descripcion" 
+                                          name="descripcion"
+                                          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary-warning focus:border-primary-warning sm:text-sm"
+                                          rows="8"
+                                          placeholder="Describe detalladamente lo ocurrido: qué pasó, cuándo, contexto, consecuencias..."
+                                          required></textarea>
+                                <p class="mt-1 text-xs text-gray-500">
+                                    <span id="charCountDesc">0</span> caracteres
+                                </p>
+                            </div>
+
+                            <!-- Resolución -->
+                            <div>
+                                <label for="resolucion" class="block text-sm font-medium text-gray-700">
+                                    Acciones Tomadas / Resolución
+                                </label>
+                                <textarea id="resolucion" 
+                                          name="resolucion"
+                                          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-primary-warning focus:border-primary-warning sm:text-sm"
+                                          rows="5"
+                                          placeholder="Si ya se ha tomado alguna acción o medida, descríbela aquí..."></textarea>
+                                <p class="mt-1 text-xs text-gray-500">
+                                    Opcional. Puedes agregar esto más tarde cuando se resuelva.
+                                </p>
+                            </div>
+
+                            <!-- Guía de buenas prácticas -->
+                            <div class="p-4 bg-yellow-100 border border-yellow-300 text-yellow-800 rounded-lg">
+                                <strong class="flex items-center">
+                                    <i data-lucide="lightbulb" class="icon w-4 h-4"></i> Recomendaciones:
+                                </strong>
+                                <ul class="list-disc list-inside mt-2 space-y-1 text-sm">
+                                    <li>Sé objetivo y específico</li>
+                                    <li>Incluye fecha y hora exacta</li>
+                                    <li>Documenta testigos si los hay</li>
+                                    <li>Menciona intentos de resolución</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="card bg-white rounded-xl p-6">
+                <div class="flex justify-between flex-col sm:flex-row space-y-4 sm:space-y-0">
+                    <a href="#" class="btn-cancel">
+                        <i data-lucide="x-circle" class="icon w-4 h-4"></i> Cancelar
+                    </a>
+                    <button type="submit" class="inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-primary-warning hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-warning transition duration-150">
+                        <i data-lucide="save" class="icon w-5 h-5"></i> Registrar Incidencia
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- JavaScript para Lógica Dinámica y Mock Data -->
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // --- MOCK DATA SIMULATION (Replaces backend API) ---
+        const mockAlumnos = [
+            { id: 'A1', nombre: 'Elena', apellidos: 'Gómez Martín' },
+            { id: 'A2', nombre: 'Javier', apellidos: 'Pérez López' },
+            { id: 'A3', nombre: 'Sofía', apellidos: 'Ruiz García' }
+        ];
+
+        const mockIncidencias = {
+            'A1': [
+                { tipo: 'RETRASO', estado: 'RESUELTA', fecha: new Date('2025-09-10T10:00:00Z') },
+                { tipo: 'FALTA', estado: 'ABIERTA', fecha: new Date('2025-10-25T14:30:00Z') }
+            ],
+            'A2': [
+                { tipo: 'PROBLEMA_ACTITUD', estado: 'EN_PROCESO', fecha: new Date('2025-10-01T09:00:00Z') },
+                { tipo: 'RETRASO', estado: 'ABIERTA', fecha: new Date('2025-10-27T08:15:00Z') }
+            ],
+            'A3': []
+        };
+        // --- END MOCK DATA ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Populate Alumno Select and Set Current Date
+            const alumnoSelect = document.getElementById('alumnoId');
+            const dateInput = document.getElementById('fecha');
+
+            mockAlumnos.forEach(alumno => {
+                const option = document.createElement('option');
+                option.value = alumno.id;
+                option.textContent = `${alumno.nombre} ${alumno.apellidos}`;
+                alumnoSelect.appendChild(option);
+            });
+
+            // Set current date as default
+            dateInput.value = new Date().toISOString().slice(0, 10);
+
+            // 2. Character Counter
+            document.getElementById('descripcion').addEventListener('input', function() {
+                document.getElementById('charCountDesc').textContent = this.value.length;
+            });
+
+            // Initial character count on load (in case of pre-filled form)
+            document.getElementById('charCountDesc').textContent = document.getElementById('descripcion').value.length;
+        });
+
+        // 3. Mostrar info según tipo de incidencia
+        function mostrarInfoTipo() {
+            const tipo = document.getElementById('tipo').value;
+            const infoDiv = document.getElementById('infoTipo');
+            const infoTexto = document.getElementById('infoTipoTexto');
+            
+            const infos = {
+                'FALTA': 'Registra la ausencia no justificada del alumno. Asegúrate de verificar si avisó previamente.',
+                'RETRASO': 'Documenta el tiempo de retraso y si es recurrente. Los retrasos reiterados pueden afectar la evaluación.',
+                'PROBLEMA_ACTITUD': 'Describe el comportamiento específico que causa preocupación. Mantén un tono objetivo y constructivo.',
+                'OTROS': 'Cualquier situación que no encaje en las categorías anteriores pero que deba quedar documentada.'
+            };
+            
+            if (tipo && infos[tipo]) {
+                infoTexto.textContent = infos[tipo];
+                infoDiv.classList.remove('hidden');
+            } else {
+                infoDiv.classList.add('hidden');
+            }
+        }
+
+        // 4. Cargar historial de incidencias del alumno (Mocked Fetch)
+        function cargarHistorialIncidencias() {
+            const alumnoId = document.getElementById('alumnoId').value;
+            const historialCard = document.getElementById('historialCard');
+            const historialContent = document.getElementById('historialContent');
+            
+            if (!alumnoId) {
+                historialCard.classList.add('hidden');
+                return;
+            }
+
+            // Simulate API call delay
+            setTimeout(() => {
+                const data = mockIncidencias[alumnoId] || [];
+
+                if (data.length > 0) {
+                    let html = '<div class="space-y-3">';
+                    data.slice(0, 5).forEach(inc => {
+                        let badgeClass = '';
+                        let statusText = '';
+
+                        switch (inc.estado) {
+                            case 'RESUELTA':
+                                badgeClass = 'bg-primary-success text-white';
+                                statusText = 'Resuelta';
+                                break;
+                            case 'EN_PROCESO':
+                                badgeClass = 'bg-primary-warning text-gray-900';
+                                statusText = 'En Proceso';
+                                break;
+                            default: // ABIERTA
+                                badgeClass = 'bg-primary-danger text-white';
+                                statusText = 'Abierta';
+                                break;
+                        }
+
+                        // Format date
+                        const formattedDate = inc.fecha.toLocaleDateString('es-ES', {
+                            day: '2-digit', month: 'short', year: 'numeric'
+                        });
+
+                        html += `
+                            <div class="p-3 border border-gray-200 rounded-lg bg-white hover:bg-gray-50 transition duration-100">
+                                <div class="flex justify-between items-start">
+                                    <small class="font-semibold text-gray-900">${inc.tipo.replace('_', ' ')}</small>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${badgeClass}">${statusText}</span>
+                                </div>
+                                <small class="text-gray-500 text-xs mt-0.5">${formattedDate}</small>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    
+                    if (data.length > 5) {
+                        html += `<p class="text-gray-500 mt-4 text-center text-xs">Mostrando 5 de ${data.length} incidencias</p>`;
+                    }
+                    
+                    historialContent.innerHTML = html;
+                    historialCard.classList.remove('hidden');
+                } else {
+                    historialContent.innerHTML = `
+                        <p class="text-primary-success text-sm flex items-center">
+                            <i data-lucide="check-circle" class="icon w-4 h-4 mr-2"></i> Este alumno no tiene incidencias previas
+                        </p>
+                    `;
+                    lucide.createIcons(); // Re-render icons after adding new content
+                    historialCard.classList.remove('hidden');
+                }
+
+            }, 500); // 500ms delay to simulate network latency
+        }
+    </script>
+</body>
+</html>

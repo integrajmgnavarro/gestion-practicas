@@ -16,7 +16,7 @@ public interface TutorPracticasRepository extends JpaRepository<TutorPracticas, 
     // Búsquedas básicas
     Optional<TutorPracticas> findByDni(String dni);
     Optional<TutorPracticas> findByEmail(String email);
-    Optional<TutorPracticas> findByUsuarioId(Long usuarioId);
+    Optional<TutorPracticas> findByUsuario_Id(Long usuarioId);
 
     // Verificaciones de existencia
     boolean existsByDni(String dni);
@@ -24,7 +24,7 @@ public interface TutorPracticasRepository extends JpaRepository<TutorPracticas, 
 
     // Búsquedas por relaciones
     List<TutorPracticas> findByEmpresa(Empresa empresa);
-    List<TutorPracticas> findByEmpresaId(Long empresaId);
+    List<TutorPracticas> findByEmpresa_Id(Long empresaId);
 
     List<TutorPracticas> findByCargo(String cargo);
     List<TutorPracticas> findByCargoContainingIgnoreCase(String cargo);
@@ -33,7 +33,7 @@ public interface TutorPracticasRepository extends JpaRepository<TutorPracticas, 
     List<TutorPracticas> findByActivo(Boolean activo);
 
     // Búsquedas combinadas
-    List<TutorPracticas> findByEmpresaIdAndActivo(Long empresaId, Boolean activo);
+    List<TutorPracticas> findByEmpresa_IdAndActivo(Long empresaId, Boolean activo);
 
     // Consultas personalizadas con JPQL
     @Query("SELECT COUNT(a) FROM TutorPracticas a WHERE a.empresa.id = :empresaId AND a.activo = true")

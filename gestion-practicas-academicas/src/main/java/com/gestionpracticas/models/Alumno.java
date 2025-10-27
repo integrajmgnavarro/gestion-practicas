@@ -62,6 +62,9 @@ public class Alumno {
 
     private LocalDate fechaInicio;
     private LocalDate fechaFin;
+    
+    @Column(name = "contratado")
+    private Boolean contratado = false; // Default false
 
     //Metadatos
     @Column(nullable = false)

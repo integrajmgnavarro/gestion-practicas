@@ -1,5 +1,13 @@
 package com.gestionpracticas.dto;
 
-public class ObservacionDiariaSearchDTO {
+import lombok.Data;
+import java.time.LocalDate;
 
+@Data
+public class ObservacionDiariaSearchDTO {
+    private Long alumnoId;
+    private LocalDate fechaDesde;
+    private LocalDate fechaHasta;
+    private Integer horasRealizadasMin;
+    private Integer horasRealizadasMax;
 }

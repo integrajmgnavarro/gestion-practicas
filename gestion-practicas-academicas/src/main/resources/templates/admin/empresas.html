@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{common/layout}">
+<head>
+    <title>Gestión de Empresas</title>
+    <!-- Carga del CDN de Tailwind CSS para el ejemplo (Normalmente iría en el layout principal) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Bloque para CSS extra, si es necesario, inyectado en el layout principal -->
+    <th:block layout:fragment="extra-css">
+        <!-- Puedes añadir estilos CSS personalizados aquí si las clases de Tailwind no son suficientes -->
+    </th:block>
+</head>
+<body>
+    <div layout:fragment="content" class="p-4 sm:p-6 lg:p-8">
+        <!-- Page Header -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+            <div class="mb-4 md:mb-0">
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
+                    <i class="bi bi-building-fill text-indigo-600 mr-3 text-4xl"></i>
+                    Gestión de Empresas
+                </h1>
+                <p class="text-gray-500 dark:text-gray-400 mt-1">Empresas colaboradoras para prácticas</p>
+            </div>
+            <div>
+                <a th:href="@{/admin/empresas/nuevo}"
+                   class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">
+                    <i class="bi bi-plus-circle mr-2"></i> Nueva Empresa
+                </a>
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="bg-white dark:bg-gray-800 shadow-xl rounded-xl p-6 mb-8">
+            <form th:action="@{/admin/empresas}" method="get" class="grid grid-cols-1 gap-4 md:grid-cols-12 md:gap-6">
+                <div class="md:col-span-4">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Nombre</label>
+                    <input type="text"
+                           class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
+                           name="nombre"
+                           placeholder="Buscar por nombre..."
+                           th:value="${param.nombre}">
+                </div>
+                <div class="md:col-span-3">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">CIF</label>
+                    <input type="text"
+                           class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
+                           name="cif"
+                           placeholder="CIF..."
+                           th:value="${param.cif}">
+                </div>
+                <div class="md:col-span-3">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Sector</label>
+                    <input type="text"
+                           class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
+                           name="sector"
+                           placeholder="Sector..."
+                           th:value="${param.sector}">
+                </div>
+                <div class="md:col-span-2 flex items-end">
+                    <button type="submit"
+                            class="w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">
+                        <i class="bi bi-search mr-1"></i> Buscar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- Total Empresas -->
+            <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-5 border-l-4 border-indigo-500 transition duration-300 hover:shadow-xl">
+                <div class="text-center">
+                    <h6 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Empresas</h6>
+                    <h3 class="text-4xl font-extrabold text-gray-900 dark:text-white mt-1"
+                        th:text="${empresas?.size() ?: 0}">0</h3>
+                </div>
+            </div>
+            <!-- Activas -->
+            <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-5 border-l-4 border-green-500 transition duration-300 hover:shadow-xl">
+                <div class="text-center">
+                    <h6 class="text-sm font-medium text-gray-500 dark:text-gray-400">Activas</h6>
+                    <h3 class="text-4xl font-extrabold text-gray-900 dark:text-white mt-1"
+                        th:text="${empresas != null ? #lists.size(empresas.?[activo]) : 0}">0</h3>
+                </div>
+            </div>
+            <!-- Sectores -->
+            <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-5 border-l-4 border-amber-500 transition duration-300 hover:shadow-xl">
+                <div class="text-center">
+                    <h6 class="text-sm font-medium text-gray-500 dark:text-gray-400">Sectores Únicos</h6>
+                    <h3 class="text-4xl font-extrabold text-gray-900 dark:text-white mt-1"
+                        th:text="${empresas != null ? #sets.size(empresas.![sector]) : 0}">0</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grid de Empresas -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div th:if="${#lists.isEmpty(empresas)}" class="md:col-span-3 lg:col-span-3">
+                <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl text-center text-gray-500 dark:text-gray-400 py-12">
+                    <i class="bi bi-building text-6xl text-gray-300 dark:text-gray-600"></i>
+                    <p class="mt-4 text-lg">No hay empresas registradas</p>
+                    <a th:href="@{/admin/empresas/nuevo}"
+                       class="inline-flex items-center mt-5 px-5 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">
+                        <i class="bi bi-plus-circle mr-2"></i> Crear Primera Empresa
+                    </a>
+                </div>
+            </div>
+
+            <div th:each="empresa : ${empresas}">
+                <div class="bg-white dark:bg-gray-800 shadow-xl rounded-xl h-full flex flex-col overflow-hidden transform hover:scale-[1.02] transition duration-300">
+                    <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex justify-between items-center">
+                        <h5 class="text-xl font-semibold text-gray-900 dark:text-white" th:text="${empresa.nombre}">Empresa XYZ</h5>
+                        <span th:if="${empresa.activo}"
+                              class="bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full dark:bg-green-900 dark:text-green-200">Activa</span>
+                        <span th:unless="${empresa.activo}"
+                              class="bg-gray-100 text-gray-800 text-xs font-semibold px-3 py-1 rounded-full dark:bg-gray-700 dark:text-gray-300">Inactiva</span>
+                    </div>
+                    <div class="p-5 flex-grow">
+                        <div class="mb-3 text-sm">
+                            <small class="text-gray-500 dark:text-gray-400">CIF:</small>
+                            <strong class="text-gray-800 dark:text-gray-100 ml-1" th:text="${empresa.cif}">B12345678</strong>
+                        </div>
+                        <div class="mb-3" th:if="${empresa.sector}">
+                            <small class="text-gray-500 dark:text-gray-400 mr-2">Sector:</small>
+                            <span class="bg-sky-100 text-sky-800 text-xs font-medium px-2 py-0.5 rounded dark:bg-sky-900 dark:text-sky-200" th:text="${empresa.sector}">Tecnología</span>
+                        </div>
+                        <hr class="my-4 border-gray-100 dark:border-gray-700">
+                        <div class="mb-3" th:if="${empresa.direccion}">
+                            <small class="text-gray-500 dark:text-gray-400 flex items-center mb-1">
+                                <i class="bi bi-geo-alt mr-2 text-indigo-500"></i> Dirección:
+                            </small>
+                            <span class="text-gray-700 dark:text-gray-300 block ml-5" th:text="${empresa.direccion}">Calle Falsa 123</span>
+                        </div>
+                        <div class="mb-3" th:if="${empresa.telefono}">
+                            <small class="text-gray-500 dark:text-gray-400 flex items-center">
+                                <i class="bi bi-telephone mr-2 text-indigo-500"></i> Teléfono:
+                            </small>
+                            <span class="text-gray-700 dark:text-gray-300 ml-5" th:text="${empresa.telefono}">987654321</span>
+                        </div>
+                        <div class="mb-3" th:if="${empresa.email}">
+                            <small class="text-gray-500 dark:text-gray-400 flex items-center">
+                                <i class="bi bi-envelope mr-2 text-indigo-500"></i> Email:
+                            </small>
+                            <a th:href="'mailto:' + ${empresa.email}"
+                               th:text="${empresa.email}"
+                               class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition duration-150 ml-5">email@empresa.com</a>
+                        </div>
+                        <div class="mb-3" th:if="${empresa.personaContacto}">
+                            <small class="text-gray-500 dark:text-gray-400 flex items-center mb-1">
+                                <i class="bi bi-person mr-2 text-indigo-500"></i> Contacto:
+                            </small>
+                            <span class="text-gray-700 dark:text-gray-300 block ml-5" th:text="${empresa.personaContacto}">Juan Pérez</span>
+                        </div>
+                    </div>
+                    <div class="px-5 py-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center mt-auto">
+                        <a th:href="@{/reportes/empresa/{id}(id=${empresa.id})}"
+                           class="text-sm font-medium text-sky-600 hover:text-white hover:bg-sky-600 border border-sky-600 rounded-lg px-3 py-1.5 transition duration-150 dark:text-sky-400 dark:hover:text-white dark:hover:bg-sky-600">
+                            <i class="bi bi-file-text mr-1"></i> Reporte
+                        </a>
+                        <div class="flex space-x-2">
+                            <a th:href="@{/admin/empresas/{id}/editar(id=${empresa.id})}"
+                               class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 p-2 rounded-full hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition duration-150">
+                                <i class="bi bi-pencil text-lg"></i>
+                            </a>
+                            <button type="button"
+                                    class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50 transition duration-150"
+                                    th:onclick="'confirmarEliminar(' + ${empresa.id} + ', \'' + ${empresa.nombre} + '\')'">
+                                <i class="bi bi-trash text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Eliminar (Tailwind Custom) -->
+        <div id="modalEliminar"
+             class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 hidden items-center justify-center transition-opacity duration-300"
+             aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg mx-4 transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-red-600 p-4 rounded-t-xl flex justify-between items-center">
+                    <h5 class="text-xl font-semibold text-white flex items-center" id="modal-title">
+                        <i class="bi bi-exclamation-triangle mr-2"></i> Confirmar Eliminación
+                    </h5>
+                    <button type="button" class="text-white hover:text-red-100 transition duration-150" onclick="cerrarModal()">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <p class="text-gray-700 dark:text-gray-300 mb-4">
+                        ¿Estás seguro de que deseas eliminar la empresa <strong id="nombreEmpresa" class="font-bold text-gray-900 dark:text-white"></strong>?
+                    </p>
+                    <p class="text-red-600 dark:text-red-400 flex items-center text-sm bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
+                        <i class="bi bi-exclamation-triangle mr-2 text-lg"></i>
+                        Esta acción eliminará también todos los tutores y asignaciones asociadas.
+                    </p>
+                </div>
+                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 rounded-b-xl flex justify-end space-x-3">
+                    <button type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 transition duration-150" onclick="cerrarModal()">Cancelar</button>
+                    <form id="formEliminar" method="post" style="display: inline;">
+                        <input type="hidden" name="_method" value="delete">
+                        <button type="submit"
+                                class="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg shadow-md hover:bg-red-700 transition duration-150">
+                            <i class="bi bi-trash mr-1"></i> Eliminar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Extra JS -->
+    <th:block layout:fragment="extra-js">
+        <script>
+            // Función para abrir el modal (reemplaza new bootstrap.Modal().show())
+            function confirmarEliminar(id, nombre) {
+                document.getElementById('nombreEmpresa').textContent = nombre;
+                document.getElementById('formEliminar').action = '/admin/empresas/' + id;
+                document.getElementById('modalEliminar').classList.remove('hidden');
+                document.getElementById('modalEliminar').classList.add('flex');
+            }
+
+            // Función para cerrar el modal (reemplaza data-bs-dismiss="modal")
+            function cerrarModal() {
+                document.getElementById('modalEliminar').classList.add('hidden');
+                document.getElementById('modalEliminar').classList.remove('flex');
+            }
+        </script>
+    </th:block>
+</body>
+</html>

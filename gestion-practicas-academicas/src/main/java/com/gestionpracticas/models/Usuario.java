@@ -52,6 +52,23 @@ public class Usuario {
         fechaCreacion = LocalDateTime.now();
     }
     
+    //Relaciones
+    @OneToOne
+    @JoinColumn(name = "alumno_id")
+    private Alumno alumno;
+    
+    @OneToOne
+    @JoinColumn(name = "tutorCurso_id")
+    private TutorCurso tutorCurso;
+    
+    @OneToOne
+    @JoinColumn(name = "tutorPracticas_id")
+    private TutorPracticas tutorPracticas;
+    
+    @OneToOne
+    @JoinColumn(name = "admin_id")
+    private Admin admin;
+    
  // Enum interno para los roles
     public enum Rol {
         ADMIN,

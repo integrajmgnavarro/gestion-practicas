@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{common/layout}">
+<head>
+    <title>Dashboard Alumno</title>
+    <!-- CDN de Tailwind para visualización inmediata. Asegúrate de que tu layout base lo cargue -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configuración para iconos de Lucide (usados en los accesos rápidos) -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'primary-teal': '#14B8A6', // Tailwind teal-500
+              'danger-red': '#EF4444', // Tailwind red-500
+            }
+          }
+        }
+      }
+    </script>
+</head>
+<body>
+
+    <div layout:fragment="content" class="min-h-screen bg-gray-100 p-4 md:p-8">
+        
+        <!-- Page Header -->
+        <div class="bg-white p-6 rounded-xl shadow-xl mb-6 border-t-4 border-primary-teal">
+            <h1 class="text-3xl font-extrabold text-gray-800 mb-2 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7 mr-3 text-primary-teal">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.79"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <span th:text="'Bienvenido/a al Panel de Alumno'">Panel de Alumno</span>
+            </h1>
+            
+            <!-- Info Box (Elevated) -->
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 text-sm md:flex justify-between items-center mt-4">
+                <p class="text-gray-600 mb-1 md:mb-0">
+                    <strong class="font-semibold">Usuario:</strong> 
+                    <span class="text-gray-800" sec:authentication="name"></span>
+                </p>
+                <p class="text-gray-600">
+                    <strong class="font-semibold">Rol:</strong> 
+                    <span class="px-2 py-0.5 inline-block text-xs font-medium rounded-full bg-primary-teal text-white" 
+                          sec:authentication="principal.authorities[0]"></span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Sección Principal - Accesos Rápidos (Grid) -->
+        <h2 class="text-2xl font-semibold text-gray-700 mt-8 mb-4 border-b border-gray-300 pb-2">Opciones Clave</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- Tarjeta 1: Perfil -->
+            <a th:href="@{/alumno/perfil}" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl transition duration-300 transform hover:scale-[1.02] border-t-4 border-primary-teal flex flex-col items-center text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary-teal mb-3">
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                </svg>
+                <span class="text-lg font-bold text-gray-800">Ver mi Perfil</span>
+                <span class="text-sm text-gray-500 mt-1">Datos personales y configuración.</span>
+            </a>
+
+            <!-- Tarjeta 2: Evaluaciones -->
+            <a th:href="@{/alumno/evaluaciones}" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl transition duration-300 transform hover:scale-[1.02] border-t-4 border-teal-500/80 flex flex-col items-center text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500/80 mb-3">
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="m10 12.5 2 2 4-4"/>
+                </svg>
+                <span class="text-lg font-bold text-gray-800">Mis Evaluaciones</span>
+                <span class="text-sm text-gray-500 mt-1">Notas y feedback de prácticas.</span>
+            </a>
+
+            <!-- Tarjeta 3: Observaciones -->
+            <a th:href="@{/alumno/observaciones}" class="bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl transition duration-300 transform hover:scale-[1.02] border-t-4 border-teal-500/60 flex flex-col items-center text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500/60 mb-3">
+                    <path d="M12 20h.01"/><path d="M18.5 10c.8 0 1.5-.7 1.5-1.5v-5c0-.8-.7-1.5-1.5-1.5h-10c-.8 0-1.5.7-1.5 1.5v5c0 .8.7 1.5 1.5 1.5"/><path d="M12 21.5V10"/><path d="m14 17-2 4-2-4"/>
+                </svg>
+                <span class="text-lg font-bold text-gray-800">Mis Observaciones</span>
+                <span class="text-sm text-gray-500 mt-1">Registro diario y comentarios del tutor.</span>
+            </a>
+            
+        </div>
+        
+        <!-- Formulario de Cerrar Sesión (al fondo) -->
+        <div class="mt-12 pt-6 border-t border-gray-300">
+            <h3 class="text-xl font-semibold text-gray-700 mb-3">Sesión</h3>
+            <form th:action="@{/auth/logout}" method="post">
+                <button type="submit" class="w-full md:w-auto px-6 py-3 bg-danger-red hover:bg-red-600 text-white font-semibold rounded-lg shadow-md transition duration-300 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/>
+                    </svg>
+                    Cerrar Sesión
+                </button>
+            </form>
+        </div>
+        
+    </div>
+
+</body>
+</html>

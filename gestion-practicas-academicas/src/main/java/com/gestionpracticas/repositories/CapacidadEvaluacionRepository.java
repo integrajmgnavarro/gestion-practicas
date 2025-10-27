@@ -19,7 +19,7 @@ public interface CapacidadEvaluacionRepository extends JpaRepository<CapacidadEv
 
     Optional<CapacidadEvaluacion> findByNombre(String nombre);
 
-    List<CapacidadEvaluacion> findByNombreContainingIgnoreCase(String nombre);
+    List<CapacidadEvaluacion> findByNombreContainingIgnoreCase(String nombre);    
 
     // =============================
     // 🔹 RELACIONES
@@ -29,11 +29,12 @@ public interface CapacidadEvaluacionRepository extends JpaRepository<CapacidadEv
      * Obtiene todas las capacidades pertenecientes a un criterio específico.
      */
     List<CapacidadEvaluacion> findByCriterio(CriterioEvaluacion criterio);
+    List<CapacidadEvaluacion> findByCriterio_Id(Long criterioId);
 
     /**
      * Busca todas las capacidades activas pertenecientes a un criterio.
      */
-    List<CapacidadEvaluacion> findByCriterioIdAndActivoTrue(Long criterioId);
+    List<CapacidadEvaluacion> findByCriterio_IdAndActivoTrue(Long criterioId);
 
     /**
      * Recupera una capacidad junto a su criterio asociado (fetch join para evitar N+1).

@@ -60,4 +60,6 @@ public class AlumnoCreateDTO {
     private LocalDate fechaInicio;
     
     private LocalDate fechaFin;
+    
+    private Boolean contratado;
 }

@@ -58,7 +58,8 @@ public class Admin {
     private LocalDateTime fechaActualizacion;
 
     // Relación con Usuario
-    @OneToOne(mappedBy = "admin")
+    @OneToOne
+    @JoinColumn(name = "admin_id")
     private Usuario usuario;
 
     // Método de utilidad para obtener el nombre completo

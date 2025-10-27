@@ -37,6 +37,7 @@ public class AlumnoDTO {
     private String horario;
     private LocalDate fechaInicio;
     private LocalDate fechaFin;
+    private Boolean contratado;
     
     // Metadata
     private Boolean activo;

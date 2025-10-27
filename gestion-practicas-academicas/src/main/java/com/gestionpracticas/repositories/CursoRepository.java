@@ -25,14 +25,14 @@ public interface CursoRepository extends JpaRepository<Curso, Long> {
     // =============================
 
     List<Curso> findByTutorCurso(TutorCurso tutorCurso);
-    List<Curso> findByTutorCursoId(Long tutorCursoId);
+    List<Curso> findByTutorCurso_Id(Long tutorCursoId);
 
     // =============================
     // 🔹 FILTROS DE ESTADO
     // =============================
 
     List<Curso> findByActivo(Boolean activo);
-    List<Curso> findByTutorCursoIdAndActivo(Long tutorCursoId, Boolean activo);
+    List<Curso> findByTutorCurso_IdAndActivo(Long tutorCursoId, Boolean activo);
 
     // =============================
     // 🔹 CONSULTAS PERSONALIZADAS

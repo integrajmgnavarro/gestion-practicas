@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{common/layout}">
+<head>
+    <title>Dashboard - Administrador</title>
+    <!-- 
+        *** SOLUCIÓN TEMPORAL PARA EL ESTILO ***
+        Agregamos el CDN de Tailwind CSS directamente aquí. 
+        Si el proyecto usa un sistema de build, esta línea debe ir en el archivo 'common/layout.html'. 
+    -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Incluimos un bloque CSS extra para definir los colores del borde de las tarjetas de estadísticas -->
+    <th:block layout:fragment="extra-css">
+        <!-- Estilos específicos para este dashboard -->
+        <style>
+            /* Bordes izquierdos que simulan los "stat-card" de Bootstrap */
+            .stat-card-blue { border-left: 4px solid #3b82f6; } /* Blue-500 equivalente */
+            .stat-card-green { border-left: 4px solid #10b981; } /* Emerald-500 equivalente */
+            .stat-card-yellow { border-left: 4px solid #f59e0b; } /* Yellow-500 equivalente */
+            .stat-card-red { border-left: 4px solid #ef4444; } /* Red-500 equivalente */
+        </style>
+    </th:block>
+</head>
+<body>
+    <!--
+        ATENCIÓN: Se ha cambiado el fondo principal a bg-gray-100 (más oscuro que gray-50)
+        para forzar la separación visual con las tarjetas blancas.
+    -->
+    <div layout:fragment="content" class="min-h-screen bg-gray-100 p-4 md:p-8">
+        <!-- Encabezado de la página: Ahora flota sobre el fondo gris claro -->
+        <div class="bg-white p-6 rounded-xl shadow-xl mb-8 border-t-4 border-blue-600">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                <div>
+                    <h1 class="text-3xl font-extrabold text-gray-900 mb-1">
+                        <i class="bi bi-speedometer2 text-blue-600 mr-2"></i>
+                        Dashboard Administrador
+                    </h1>
+                    <p class="text-gray-500 text-sm">Panel de control general del sistema</p>
+                </div>
+                <div class="mt-4 sm:mt-0">
+                    <button onclick="location.reload()"
+                            class="px-4 py-2 border border-blue-600 text-blue-600 font-medium rounded-lg hover:bg-blue-600 hover:text-white transition duration-150 shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        <i class="bi bi-arrow-clockwise mr-1"></i> Actualizar Datos
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjetas de KPIs (Key Performance Indicators) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
+            
+            <!-- Total Alumnos Card -->
+            <div class="bg-white shadow-xl hover:shadow-2xl transition duration-300 rounded-xl overflow-hidden stat-card-blue transform hover:scale-[1.02]">
+                <div class="p-5">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-500 mb-1">Total Alumnos</p>
+                            <p class="text-4xl font-extrabold text-gray-900" 
+                               th:text="${reporteEjecutivo?.totalAlumnos ?: 0}">0</p>
+                        </div>
+                        <div class="text-blue-600 bg-blue-50 p-4 rounded-full flex-shrink-0">
+                            <i class="bi bi-people-fill text-3xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Cursos Card -->
+            <div class="bg-white shadow-xl hover:shadow-2xl transition duration-300 rounded-xl overflow-hidden stat-card-green transform hover:scale-[1.02]">
+                <div class="p-5">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-500 mb-1">Total Cursos</p>
+                            <p class="text-4xl font-extrabold text-gray-900" 
+                               th:text="${reporteEjecutivo?.totalCursos ?: 0}">0</p>
+                        </div>
+                        <div class="text-green-600 bg-green-50 p-4 rounded-full flex-shrink-0">
+                            <i class="bi bi-book-fill text-3xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Empresas Card -->
+            <div class="bg-white shadow-xl hover:shadow-2xl transition duration-300 rounded-xl overflow-hidden stat-card-yellow transform hover:scale-[1.02]">
+                <div class="p-5">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-500 mb-1">Total Empresas</p>
+                            <p class="text-4xl font-extrabold text-gray-900" 
+                               th:text="${reporteEjecutivo?.totalEmpresas ?: 0}">0</p>
+                        </div>
+                        <div class="text-yellow-600 bg-yellow-50 p-4 rounded-full flex-shrink-0">
+                            <i class="bi bi-building-fill text-3xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tutores Prácticas Card -->
+            <div class="bg-white shadow-xl hover:shadow-2xl transition duration-300 rounded-xl overflow-hidden stat-card-red transform hover:scale-[1.02]">
+                <div class="p-5">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-500 mb-1">Tutores Prácticas</p>
+                            <p class="text-4xl font-extrabold text-gray-900" 
+                               th:text="${reporteEjecutivo?.totalTutoresPracticas ?: 0}">0</p>
+                        </div>
+                        <div class="text-red-600 bg-red-50 p-4 rounded-full flex-shrink-0">
+                            <i class="bi bi-person-workspace text-3xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas de Evaluación y Empleabilidad -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+            
+            <!-- Estadísticas de Evaluación -->
+            <div class="bg-white shadow-xl rounded-xl">
+                <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 rounded-t-xl">
+                    <h2 class="text-lg font-bold text-gray-700">
+                        <i class="bi bi-clipboard-data mr-2 text-blue-600"></i> Estadísticas de Evaluación
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-2 text-center gap-4">
+                        
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">Total Evaluaciones</p>
+                            <p class="text-3xl font-extrabold text-blue-600" 
+                               th:text="${reporteEjecutivo?.totalEvaluaciones ?: 0}">0</p>
+                        </div>
+                        
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">Nota Media Global</p>
+                            <p class="text-3xl font-extrabold text-green-600" 
+                               th:text="${#numbers.formatDecimal(reporteEjecutivo?.notaMediaGlobal ?: 0, 1, 2)}">0.00</p>
+                        </div>
+                        
+                        <div class="col-span-2 mt-4">
+                            <p class="text-xs text-gray-500 mb-2 font-medium">Tasa de Aprobados Global</p>
+                            <div class="w-full h-8 bg-gray-200 rounded-full overflow-hidden relative">
+                                <div class="h-full bg-green-500 flex items-center justify-center rounded-full transition-all duration-500 ease-out" 
+                                     role="progressbar" 
+                                     th:style="'width: ' + ${reporteEjecutivo?.tasaAprobadosGlobal ?: 0} + '%'"
+                                     th:aria-valuenow="${reporteEjecutivo?.tasaAprobadosGlobal ?: 0}"
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    <strong class="text-white text-sm font-bold" 
+                                            th:text="${#numbers.formatDecimal(reporteEjecutivo?.tasaAprobadosGlobal ?: 0, 1, 2)} + '%'">0%</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empleabilidad -->
+            <div class="bg-white shadow-xl rounded-xl">
+                <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 rounded-t-xl">
+                    <h2 class="text-lg font-bold text-gray-700">
+                        <i class="bi bi-briefcase-fill mr-2 text-indigo-600"></i> Empleabilidad
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-2 text-center gap-4">
+                        
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">Alumnos Finalizados</p>
+                            <p class="text-3xl font-extrabold text-indigo-600" 
+                               th:text="${reporteEjecutivo?.alumnosFinalizados ?: 0}">0</p>
+                        </div>
+                        
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">Contratados</p>
+                            <p class="text-3xl font-extrabold text-green-600" 
+                               th:text="${reporteEjecutivo?.alumnosContratados ?: 0}">0</p>
+                        </div>
+                        
+                        <div class="col-span-2 mt-4">
+                            <p class="text-xs text-gray-500 mb-2 font-medium">Porcentaje de Contratación</p>
+                            <div class="w-full h-8 bg-gray-200 rounded-full overflow-hidden relative">
+                                <div class="h-full bg-indigo-500 flex items-center justify-center rounded-full transition-all duration-500 ease-out" 
+                                     role="progressbar" 
+                                     th:style="'width: ' + ${reporteEjecutivo?.porcentajeContratacion ?: 0} + '%'"
+                                     th:aria-valuenow="${reporteEjecutivo?.porcentajeContratacion ?: 0}"
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    <strong class="text-white text-sm font-bold" 
+                                            th:text="${#numbers.formatDecimal(reporteEjecutivo?.porcentajeContratacion ?: 0, 1, 2)} + '%'">0%</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Incidencias y Observaciones -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+            
+            <!-- Incidencias -->
+            <div class="bg-white shadow-xl rounded-xl">
+                <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 rounded-t-xl">
+                    <h2 class="text-lg font-bold text-gray-700">
+                        <i class="bi bi-exclamation-triangle-fill mr-2 text-red-600"></i> Incidencias
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-3 text-center">
+                        
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1 font-medium">Total</p>
+                            <p class="text-3xl font-extrabold text-gray-800" 
+                               th:text="${reporteEjecutivo?.totalIncidencias ?: 0}">0</p>
+                        </div>
+                        
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1 font-medium">Abiertas</p>
+                            <p class="text-3xl font-extrabold text-red-600" 
+                               th:text="${reporteEjecutivo?.incidenciasAbiertas ?: 0}">0</p>
+                        </div>
+                        
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1 font-medium">Resueltas</p>
+                            <p class="text-3xl font-extrabold text-green-600" 
+                               th:text="${reporteEjecutivo?.incidenciasResueltas ?: 0}">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Observaciones Diarias -->
+            <div class="bg-white shadow-xl rounded-xl">
+                <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 rounded-t-xl">
+                    <h2 class="text-lg font-bold text-gray-700">
+                        <i class="bi bi-journal-text mr-2 text-gray-600"></i> Observaciones Diarias
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-2 text-center">
+                        
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1 font-medium">Total Registradas</p>
+                            <p class="text-3xl font-extrabold text-gray-800" 
+                               th:text="${reporteEjecutivo?.totalObservaciones ?: 0}">0</p>
+                        </div>
+                        
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1 font-medium">Horas Promedio/Día</p>
+                            <p class="text-3xl font-extrabold text-gray-800" 
+                               th:text="${#numbers.formatDecimal(reporteEjecutivo?.promedioHorasDiarias ?: 0, 1, 2)}">0.00</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accesos Rápidos -->
+        <div class="bg-white shadow-xl rounded-xl">
+            <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 rounded-t-xl">
+                <h2 class="text-lg font-bold text-gray-700">
+                    <i class="bi bi-lightning-fill mr-2 text-yellow-500"></i> Accesos Rápidos
+                </h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    
+                    <!-- Gestionar Alumnos -->
+                    <a th:href="@{/admin/alumnos}" class="flex flex-col items-center justify-center p-5 border border-blue-300 text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-xl transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                        <i class="bi bi-people-fill mb-2 text-4xl"></i>
+                        <span class="text-base font-semibold text-center">Gestionar Alumnos</span>
+                    </a>
+                    
+                    <!-- Gestionar Empresas -->
+                    <a th:href="@{/admin/empresas}" class="flex flex-col items-center justify-center p-5 border border-green-300 text-green-700 bg-green-50 hover:bg-green-100 rounded-xl transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                        <i class="bi bi-building-fill mb-2 text-4xl"></i>
+                        <span class="text-base font-semibold text-center">Gestionar Empresas</span>
+                    </a>
+                    
+                    <!-- Ver Estadísticas -->
+                    <a th:href="@{/admin/estadisticas}" class="flex flex-col items-center justify-center p-5 border border-yellow-300 text-yellow-700 bg-yellow-50 hover:bg-yellow-100 rounded-xl transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                        <i class="bi bi-graph-up mb-2 text-4xl"></i>
+                        <span class="text-base font-semibold text-center">Ver Estadísticas</span>
+                    </a>
+                    
+                    <!-- Reporte Ejecutivo -->
+                    <a th:href="@{/admin/reportes/ejecutivo}" class="flex flex-col items-center justify-center p-5 border border-red-300 text-red-700 bg-red-50 hover:bg-red-100 rounded-xl transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                        <i class="bi bi-file-earmark-text-fill mb-2 text-4xl"></i>
+                        <span class="text-base font-semibold text-center">Reporte Ejecutivo</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

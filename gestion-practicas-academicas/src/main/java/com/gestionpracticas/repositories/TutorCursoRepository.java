@@ -16,15 +16,15 @@ public interface TutorCursoRepository extends JpaRepository<TutorCurso, Long> {
     // Búsquedas básicas
     Optional<TutorCurso> findByDni(String dni);
     Optional<TutorCurso> findByEmail(String email);
-    Optional<TutorCurso> findByUsuarioId(Long usuarioId);
+    Optional<TutorCurso> findByUsuario_Id(Long usuarioId);
 
     // Verificaciones de existencia
     boolean existsByDni(String dni);
     boolean existsByEmail(String email);
 
     // Búsquedas por relaciones
-    List<TutorCurso> findByCurso(Curso curso);
-    List<TutorCurso> findByCursoId(Long cursoId);
+    List<TutorCurso> findByCursos(Curso curso);
+    List<TutorCurso> findByCursos_Id(Long cursoId);
 
     List<TutorCurso> findByEspecialidad(String especialidad);
     List<TutorCurso> findByEspecialidadContainingIgnoreCase(String especialidad);

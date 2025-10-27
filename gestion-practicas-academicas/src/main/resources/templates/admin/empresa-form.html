@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{common/layout}">
+<head>
+    <title>Nueva Empresa</title>
+    <!-- Carga del CDN de Tailwind CSS para el ejemplo (Normalmente iría en el layout principal) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <!-- Bloque para CSS extra, si es necesario, inyectado en el layout principal -->
+    <th:block layout:fragment="extra-css">
+        <!-- Estilos específicos si son necesarios, aunque se prioriza Tailwind -->
+    </th:block>
+</head>
+<body>
+    <div layout:fragment="content" class="p-4 sm:p-6 lg:p-8">
+        <!-- Page Header -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b pb-4 border-gray-200 dark:border-gray-700">
+            <div class="mb-4 md:mb-0">
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
+                    <i class="bi bi-building-fill-add text-indigo-600 mr-3 text-4xl"></i>
+                    Nueva Empresa
+                </h1>
+                <p class="text-gray-500 dark:text-gray-400 mt-1">Registra una nueva empresa colaboradora</p>
+            </div>
+            <div>
+                <a th:href="@{/admin/empresas}"
+                   class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 transition duration-150">
+                    <i class="bi bi-arrow-left mr-2"></i> Volver
+                </a>
+            </div>
+        </div>
+
+        <!-- Formulario -->
+        <form th:action="@{/admin/empresas}" th:object="${empresaCreateDTO}" method="post">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Datos Básicos -->
+                <div class="bg-white dark:bg-gray-800 shadow-xl rounded-xl">
+                    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 rounded-t-xl">
+                        <h5 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                            <i class="bi bi-info-circle mr-2 text-indigo-600"></i> Datos Básicos
+                        </h5>
+                    </div>
+                    <div class="p-6">
+                        <div class="mb-5">
+                            <label for="nombre" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Nombre <span class="text-red-500">*</span></label>
+                            <input type="text"
+                                   class="w-full px-4 py-2 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition duration-150"
+                                   th:classappend="${#fields.hasErrors('nombre')} ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'"
+                                   id="nombre"
+                                   th:field="*{nombre}"
+                                   required>
+                            <div class="text-sm text-red-600 mt-1" th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}">Error</div>
+                        </div>
+
+                        <div class="mb-5">
+                            <label for="cif" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">CIF <span class="text-red-500">*</span></label>
+                            <input type="text"
+                                   class="w-full px-4 py-2 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition duration-150"
+                                   th:classappend="${#fields.hasErrors('cif')} ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'"
+                                   id="cif"
+                                   th:field="*{cif}"
+                                   maxlength="12"
+                                   required>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Formato: A12345678</div>
+                            <div class="text-sm text-red-600 mt-1" th:if="${#fields.hasErrors('cif')}" th:errors="*{cif}">Error</div>
+                        </div>
+
+                        <div class="mb-5">
+                            <label for="sector" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Sector</label>
+                            <input type="text"
+                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition duration-150"
+                                   id="sector"
+                                   th:field="*{sector}"
+                                   list="sectoresList"
+                                   placeholder="Ej: Tecnología, Hostelería...">
+                            <datalist id="sectoresList">
+                                <option value="Tecnología">
+                                <option value="Hostelería">
+                                <option value="Comercio">
+                                <option value="Industria">
+                                <option value="Servicios">
+                                <option value="Educación">
+                                <option value="Salud">
+                                <option value="Construcción">
+                            </datalist>
+                        </div>
+
+                        <div class="mb-5">
+                            <label for="direccion" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Dirección</label>
+                            <textarea class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition duration-150"
+                                      id="direccion"
+                                      th:field="*{direccion}"
+                                      rows="3"
+                                      placeholder="Calle, número, código postal, ciudad"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Datos de Contacto -->
+                <div class="bg-white dark:bg-gray-800 shadow-xl rounded-xl h-fit">
+                    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 rounded-t-xl">
+                        <h5 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                            <i class="bi bi-telephone mr-2 text-indigo-600"></i> Datos de Contacto
+                        </h5>
+                    </div>
+                    <div class="p-6">
+                        <div class="mb-5">
+                            <label for="personaContacto" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Persona de Contacto</label>
+                            <input type="text"
+                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition duration-150"
+                                   id="personaContacto"
+                                   th:field="*{personaContacto}"
+                                   placeholder="Nombre y apellidos">
+                        </div>
+
+                        <div class="mb-5">
+                            <label for="telefono" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Teléfono</label>
+                            <input type="tel"
+                                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition duration-150"
+                                   id="telefono"
+                                   th:field="*{telefono}"
+                                   placeholder="912345678">
+                        </div>
+
+                        <div class="mb-5">
+                            <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Email</label>
+                            <input type="email"
+                                   class="w-full px-4 py-2 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition duration-150"
+                                   th:classappend="${#fields.hasErrors('email')} ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'"
+                                   id="email"
+                                   th:field="*{email}"
+                                   placeholder="contacto@empresa.com">
+                            <div class="text-sm text-red-600 mt-1" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Error</div>
+                        </div>
+
+                        <!-- Vista previa de datos -->
+                        <div class="p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-700 rounded-lg mt-6">
+                            <i class="bi bi-info-circle text-indigo-600 dark:text-indigo-400 mr-2"></i>
+                            <strong class="text-indigo-800 dark:text-indigo-300">Información:</strong>
+                            <span class="text-indigo-700 dark:text-indigo-400">Una vez creada la empresa, podrás asignar tutores de prácticas desde el apartado correspondiente.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones (Sección de pie de página fija) -->
+            <div class="mt-8 sticky bottom-0 bg-white dark:bg-gray-800 shadow-2xl rounded-xl p-4 border border-gray-100 dark:border-gray-700">
+                <div class="flex justify-between">
+                    <a th:href="@{/admin/empresas}"
+                       class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg shadow-sm hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 transition duration-150">
+                        <i class="bi bi-x-circle mr-2"></i> Cancelar
+                    </a>
+                    <button type="submit"
+                            class="inline-flex items-center px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700 transition duration-150">
+                        <i class="bi bi-save mr-2"></i> Guardar Empresa
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

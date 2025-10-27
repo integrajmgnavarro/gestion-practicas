@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <!-- 
+        Footer Fragment (common/footer :: footer)
+        - Utiliza clases de Tailwind CSS para un diseño limpio y moderno.
+        - Se integra con la plantilla base (layout.html)
+    -->
+    <footer th:fragment="footer" class="bg-white border-t border-gray-200 py-4 shadow-sm">
+        <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">
+                
+                <!-- Columna Izquierda: Derechos de Autor -->
+                <div class="mb-2 md:mb-0 text-center md:text-left">
+                    <span class="text-gray-600">
+                        &copy; 2025 Sistema de Gestión de Prácticas Académicas
+                    </span>
+                </div>
+                
+                <!-- Columna Derecha: Información de Desarrollo -->
+                <div class="text-center md:text-right">
+                    <span class="text-gray-400 font-medium">
+                        <i class="bi bi-code-slash mr-1"></i> Desarrollado con Spring Boot & Thymeleaf
+                    </span>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

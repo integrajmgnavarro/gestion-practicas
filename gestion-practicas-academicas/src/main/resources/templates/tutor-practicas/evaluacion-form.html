@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Evaluación de Tutor de Prácticas</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons (similar a Bootstrap Icons) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Configuración de fuente Inter para un look moderno */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        /* Estilo para simular la barra de progreso sin depender de componentes de terceros */
+        .progress-bar {
+            transition: width 0.4s ease-in-out, background-color 0.4s ease-in-out;
+            color: #1f2937; /* Gris oscuro para el texto dentro */
+            font-weight: 600;
+            line-height: 25px; /* Altura de la barra */
+        }
+        /* Para usar Lucide Icons en el HTML */
+        [data-lucide] {
+            display: inline-block;
+            vertical-align: middle;
+            width: 1.25em;
+            height: 1.25em;
+        }
+    </style>
+</head>
+<body>
+    <div class="max-w-7xl mx-auto p-4 sm:px-6 lg:px-8 py-10">
+        <!-- Page Header -->
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 bg-white p-6 rounded-xl shadow-md">
+            <div>
+                <h1 class="text-3xl font-extrabold text-gray-900 flex items-center mb-1">
+                    <i data-lucide="clipboard-pen-line" class="text-indigo-600 mr-3 w-7 h-7"></i>
+                    Nueva Evaluación
+                </h1>
+                <p class="text-gray-500 text-sm">Evalúa el desempeño de un alumno en sus prácticas.</p>
+            </div>
+            <div class="mt-4 sm:mt-0">
+                <a href="/tutor-practicas/evaluaciones" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition duration-150">
+                    <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i> Volver
+                </a>
+            </div>
+        </header>
+
+        <!-- Formulario de Evaluación -->
+        <form action="#" method="post" onsubmit="console.log('Formulario enviado: Evaluación guardada')">
+            
+            <!-- Hidden input (simulado) -->
+            <input type="hidden" name="tutorPracticasId" value="12345">
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Columna Izquierda: Datos de la Evaluación -->
+                <div class="space-y-8">
+                    <div class="bg-white shadow-xl rounded-xl">
+                        <div class="p-4 border-b border-gray-200 bg-gray-50 rounded-t-xl">
+                            <h5 class="text-lg font-semibold text-gray-700 flex items-center">
+                                <i data-lucide="user" class="w-5 h-5 mr-2"></i> Datos de la Evaluación
+                            </h5>
+                        </div>
+                        <div class="p-6">
+                            <div class="mb-4">
+                                <label for="alumnoId" class="block text-sm font-medium text-gray-700 mb-1">Alumno <span class="text-red-500">*</span></label>
+                                <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150" 
+                                        id="alumnoId" 
+                                        name="alumnoId"
+                                        required
+                                        onchange="cargarEvaluacionesPrevias()">
+                                    <option value="">Seleccionar alumno...</option>
+                                    <!-- Options populated by JS: MOCK_ALUMNOS -->
+                                </select>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="criterioId" class="block text-sm font-medium text-gray-700 mb-1">Criterio de Evaluación <span class="text-red-500">*</span></label>
+                                <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150" 
+                                        id="criterioId" 
+                                        name="criterioId"
+                                        required
+                                        onchange="cargarCapacidades()">
+                                    <option value="">Seleccionar criterio...</option>
+                                    <!-- Options populated by JS: MOCK_CRITERIOS -->
+                                </select>
+                                <small class="text-xs text-gray-500 italic mt-1 block" id="criterioDescripcion"></small>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="capacidadId" class="block text-sm font-medium text-gray-700 mb-1">Capacidad <span class="text-red-500">*</span></label>
+                                <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150" 
+                                        id="capacidadId" 
+                                        name="capacidadId"
+                                        required
+                                        onchange="actualizarPuntuacionMaxima()">
+                                    <option value="">Primero selecciona un criterio...</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="fecha" class="block text-sm font-medium text-gray-700 mb-1">Fecha <span class="text-red-500">*</span></label>
+                                <input type="date" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150" 
+                                        id="fecha" 
+                                        name="fecha"
+                                        required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna Derecha: Puntuación y Observaciones -->
+                <div class="space-y-8">
+                    <div class="bg-white shadow-xl rounded-xl">
+                        <div class="p-4 border-b border-gray-200 bg-gray-50 rounded-t-xl">
+                            <h5 class="text-lg font-semibold text-gray-700 flex items-center">
+                                <i data-lucide="star" class="w-5 h-5 mr-2"></i> Puntuación y Observaciones
+                            </h5>
+                        </div>
+                        <div class="p-6">
+                            <div class="mb-4">
+                                <label for="puntuacion" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Puntuación <span class="text-red-500">*</span>
+                                    <span id="puntuacionMaximaLabel" class="text-gray-500">(sobre 10)</span>
+                                </label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="number" 
+                                            class="flex-grow px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150" 
+                                            id="puntuacion" 
+                                            name="puntuacion"
+                                            min="0"
+                                            max="10"
+                                            step="0.01"
+                                            required
+                                            oninput="actualizarVisualizacionNota()">
+                                    <span class="text-lg font-medium text-gray-500" id="puntuacionMaximaText">/ 10</span>
+                                </div>
+                                
+                                <!-- Barra de progreso visual -->
+                                <div class="mt-3">
+                                    <div class="h-6 bg-gray-200 rounded-full overflow-hidden">
+                                        <div class="progress-bar flex items-center justify-center text-xs text-white" 
+                                                id="progressPuntuacion"
+                                                role="progressbar" 
+                                                style="width: 0%">
+                                            <span id="progressText">0%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="observaciones" class="block text-sm font-medium text-gray-700 mb-1">Observaciones</label>
+                                <textarea class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150" 
+                                            id="observaciones" 
+                                            name="observaciones"
+                                            rows="8"
+                                            placeholder="Describe el desempeño del alumno, puntos fuertes, áreas de mejora..."></textarea>
+                                <small class="text-xs text-gray-500 mt-1 block">
+                                    <span id="charCount">0</span> caracteres
+                                </small>
+                            </div>
+
+                            <!-- Info de evaluaciones previas -->
+                            <!-- Convertido a estilo Tailwind de alerta azul -->
+                            <div class="p-4 mt-6 bg-blue-100 border-l-4 border-blue-500 text-blue-700 rounded-lg" id="evaluacionesPrevias" style="display: none;">
+                                <div class="flex items-center">
+                                    <i data-lucide="info" class="w-5 h-5 mr-3 flex-shrink-0"></i>
+                                    <div>
+                                        <strong class="font-semibold">Evaluaciones previas:</strong>
+                                        <div id="evaluacionesPreviasContent" class="text-sm mt-1"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción (Sticky para mejor UX en móviles) -->
+            <div class="bg-white p-6 shadow-xl rounded-xl mt-8 sticky bottom-0 z-10 border-t border-gray-200">
+                <div class="flex justify-between">
+                    <a href="/tutor-practicas/evaluaciones" class="inline-flex items-center px-6 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition duration-150">
+                        <i data-lucide="x-circle" class="w-4 h-4 mr-2"></i> Cancelar
+                    </a>
+                    <button type="submit" class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150">
+                        <i data-lucide="save" class="w-4 h-4 mr-2"></i> Guardar Evaluación
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Lógica de Simulación (Mantenida idéntica al código original de JS) -->
+    <script>
+        // Inicialización de Lucide Icons (para que se muestren los iconos)
+        lucide.createIcons();
+
+        // --- MOCK DATA para simular el servidor/API ---
+        const MOCK_ALUMNOS = [
+            { id: 1, nombre: 'Javier', apellidos: 'López Ruiz' },
+            { id: 2, nombre: 'Ana', apellidos: 'García Pérez' },
+            { id: 3, nombre: 'Carlos', apellidos: 'Sánchez Martín' }
+        ];
+
+        const MOCK_CRITERIOS = [
+            { id: 101, nombre: 'Habilidades Técnicas', peso: 50, descripcion: 'Evalúa la aplicación de conocimientos técnicos y herramientas específicas del sector.' },
+            { id: 102, nombre: 'Colaboración y Comunicación', peso: 30, descripcion: 'Evalúa la interacción efectiva con el equipo y la claridad en la comunicación de ideas.' },
+            { id: 103, nombre: 'Iniciativa y Autonomía', peso: 20, descripcion: 'Evalúa la capacidad de proponer soluciones y trabajar sin supervisión constante.' }
+        ];
+
+        const MOCK_CAPACIDADES = [
+            // Criterio 101: Habilidades Técnicas
+            { id: 1, criterioId: 101, nombre: 'Programación Orientada a Objetos', puntuacionMaxima: 10.0 },
+            { id: 2, criterioId: 101, nombre: 'Uso de Base de Datos SQL', puntuacionMaxima: 8.5 },
+            // Criterio 102: Colaboración y Comunicación
+            { id: 3, criterioId: 102, nombre: 'Presentación de Resultados', puntuacionMaxima: 7.0 },
+            { id: 4, criterioId: 102, nombre: 'Gestión de Conflictos', puntuacionMaxima: 5.0 },
+            // Criterio 103: Iniciativa y Autonomía
+            { id: 5, criterioId: 103, nombre: 'Propuesta de Mejoras', puntuacionMaxima: 10.0 },
+            { id: 6, criterioId: 103, nombre: 'Manejo del Tiempo', puntuacionMaxima: 9.0 }
+        ];
+
+        const MOCK_EVALUACIONES_PREVIAS = [
+            { alumnoId: 2, criterioNombre: 'Habilidades Técnicas', capacidadNombre: 'POO', puntuacion: 8.5 },
+            { alumnoId: 2, criterioNombre: 'Habilidades Técnicas', capacidadNombre: 'SQL', puntuacion: 7.0 },
+            { alumnoId: 2, criterioNombre: 'Colaboración', capacidadNombre: 'Presentación', puntuacion: 6.5 },
+            { alumnoId: 1, criterioNombre: 'Iniciativa', capacidadNombre: 'Manejo del Tiempo', puntuacion: 9.0 },
+        ];
+        
+        // --- FIN MOCK DATA ---
+
+        /**
+         * Carga las opciones iniciales (Alumnos y Criterios)
+         */
+        function setupInitialData() {
+            // Establecer fecha actual
+            document.getElementById('fecha').value = new Date().toISOString().slice(0, 10);
+
+            // Cargar Alumnos
+            const alumnoSelect = document.getElementById('alumnoId');
+            MOCK_ALUMNOS.forEach(alumno => {
+                const option = document.createElement('option');
+                option.value = alumno.id;
+                option.textContent = `${alumno.nombre} ${alumno.apellidos}`;
+                alumnoSelect.appendChild(option);
+            });
+
+            // Cargar Criterios
+            const criterioSelect = document.getElementById('criterioId');
+            MOCK_CRITERIOS.forEach(criterio => {
+                const option = document.createElement('option');
+                option.value = criterio.id;
+                option.textContent = `${criterio.nombre} (${criterio.peso}%)`;
+                option.setAttribute('data-descripcion', criterio.descripcion);
+                criterioSelect.appendChild(option);
+            });
+
+            // Inicializar el contador de caracteres
+            document.getElementById('observaciones').dispatchEvent(new Event('input'));
+        }
+
+        /**
+         * Cargar capacidades según criterio seleccionado (Simula llamada AJAX/API)
+         */
+        function cargarCapacidades() {
+            const criterioSelect = document.getElementById('criterioId');
+            const capacidadSelect = document.getElementById('capacidadId');
+            const criterioId = parseInt(criterioSelect.value);
+            
+            // Mostrar descripción del criterio
+            const selectedOption = criterioSelect.options[criterioSelect.selectedIndex];
+            const descripcion = selectedOption.getAttribute('data-descripcion');
+            document.getElementById('criterioDescripcion').textContent = descripcion || '';
+            
+            // Limpiar y resetear capacidades
+            capacidadSelect.innerHTML = '<option value="">Seleccionar capacidad...</option>';
+            document.getElementById('puntuacion').setAttribute('max', 10); // Reset max value
+            document.getElementById('puntuacionMaximaLabel').textContent = '(sobre 10)';
+            document.getElementById('puntuacionMaximaText').textContent = '/ 10';
+            actualizarVisualizacionNota();
+
+            if (!criterioId) return;
+            
+            // Filtrar capacidades por el criterio seleccionado (Simulación de la respuesta JSON)
+            const filteredCapacidades = MOCK_CAPACIDADES.filter(cap => cap.criterioId === criterioId);
+
+            filteredCapacidades.forEach(cap => {
+                const option = document.createElement('option');
+                option.value = cap.id;
+                option.textContent = `${cap.nombre} (Max: ${cap.puntuacionMaxima})`;
+                option.setAttribute('data-max', cap.puntuacionMaxima);
+                capacidadSelect.appendChild(option);
+            });
+        }
+        
+        /**
+         * Actualizar puntuación máxima del input numérico según la capacidad
+         */
+        function actualizarPuntuacionMaxima() {
+            const capacidadSelect = document.getElementById('capacidadId');
+            const selectedOption = capacidadSelect.options[capacidadSelect.selectedIndex];
+            
+            // Usar 10 como fallback si no hay capacidad seleccionada o el atributo no existe
+            const max = parseFloat(selectedOption?.getAttribute('data-max')) || 10;
+            
+            document.getElementById('puntuacion').setAttribute('max', max);
+            document.getElementById('puntuacionMaximaLabel').textContent = `(sobre ${max})`;
+            document.getElementById('puntuacionMaximaText').textContent = `/ ${max}`;
+            
+            // Ajustar la visualización después de cambiar el máximo
+            actualizarVisualizacionNota();
+        }
+        
+        /**
+         * Actualiza la barra de progreso visual y el color (Usando clases de Tailwind)
+         */
+        function actualizarVisualizacionNota() {
+            const puntuacionInput = document.getElementById('puntuacion');
+            const puntuacion = parseFloat(puntuacionInput.value) || 0;
+            const max = parseFloat(puntuacionInput.getAttribute('max')) || 10;
+            const porcentaje = (puntuacion / max) * 100;
+            
+            const progressBar = document.getElementById('progressPuntuacion');
+            progressBar.style.width = porcentaje + '%';
+            progressBar.textContent = `${porcentaje.toFixed(0)}%`;
+            
+            // Quitar clases de color previas
+            progressBar.classList.remove('bg-green-500', 'bg-yellow-500', 'bg-red-500');
+
+            // Color según puntuación
+            if (porcentaje >= 80) {
+                progressBar.classList.add('bg-green-500');
+            } else if (porcentaje >= 50) {
+                // Usamos amber para que se vea mejor que yellow en la barra
+                progressBar.classList.add('bg-yellow-500'); 
+            } else {
+                progressBar.classList.add('bg-red-500');
+            }
+        }
+        
+        /**
+         * Cargar evaluaciones previas del alumno (Simula llamada AJAX/API)
+         */
+        function cargarEvaluacionesPrevias() {
+            const alumnoId = parseInt(document.getElementById('alumnoId').value);
+            const previasDiv = document.getElementById('evaluacionesPrevias');
+            const contentDiv = document.getElementById('evaluacionesPreviasContent');
+            
+            // Ocultar por defecto
+            previasDiv.style.display = 'none';
+            contentDiv.innerHTML = 'No se encontraron evaluaciones previas recientes.';
+
+            if (!alumnoId) return;
+            
+            // Filtrar evaluaciones por el alumno seleccionado
+            const evaluaciones = MOCK_EVALUACIONES_PREVIAS.filter(ev => ev.alumnoId === alumnoId);
+            
+            if (evaluaciones.length > 0) {
+                // Mostrar solo las 3 más recientes (simulado con slice)
+                const content = evaluaciones.slice(0, 3).map(ev => 
+                    `<small class="block text-sm">${ev.criterioNombre} - ${ev.capacidadNombre}: <strong class="font-bold">${ev.puntuacion}</strong></small>`
+                ).join('');
+
+                contentDiv.innerHTML = content;
+                previasDiv.style.display = 'block';
+            }
+        }
+
+        // Contador de caracteres
+        document.getElementById('observaciones').addEventListener('input', function() {
+            document.getElementById('charCount').textContent = this.value.length;
+        });
+
+        // Inicialización al cargar la página
+        window.onload = setupInitialData;
+    </script>
+</body>
+</html>

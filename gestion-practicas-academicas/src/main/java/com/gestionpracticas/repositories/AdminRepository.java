@@ -13,7 +13,7 @@ public interface AdminRepository extends JpaRepository<Admin, Long> {
     // Búsquedas básicas
     Optional<Admin> findByDni(String dni);
     Optional<Admin> findByEmail(String email);
-    Optional<Admin> findByUsuarioId(Long usuarioId);
+    Optional<Admin> findByUsuario_Id(Long usuarioId);
 
     // Verificaciones de existencia
     boolean existsByDni(String dni);
