@@ -1,46 +1,40 @@
 package com.gestionpracticas.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class AlumnoDTO {
     private Long id;
-    private Long usuarioId;
     private String nombre;
     private String apellidos;
     private String dni;
     private LocalDate fechaNacimiento;
     private String email;
     private String telefono;
-    
-    // Datos de relaciones (solo IDs y nombres básicos)
-    private Long cursoId;
-    private String cursoNombre;
-    
-    private Long empresaId;
-    private String empresaNombre;
-    
-    private Long tutorPracticasId;
-    private String tutorPracticasNombre;
-    
-    private Long tutorCursoId;
-    private String tutorCursoNombre;
-    
-    // Datos de prácticas
+
+    // Datos de Prácticas
     private Integer duracionPracticas;
     private String horario;
     private LocalDate fechaInicio;
     private LocalDate fechaFin;
     private Boolean contratado;
+
+    // Relaciones (Nombres para visualización)
+    private String cursoNombre;
+    private String empresaNombre;
+    private String tutorPracticasNombre;
     
-    // Metadata
+    // <-- ¡NUEVO CAMPO! Nombre del Tutor de Curso
+    private String tutorCursoNombre; 
+
+    // Metadatos
     private Boolean activo;
     private LocalDateTime fechaCreacion;
-    private LocalDateTime fechaActualizacion;
+
+    // Método de utilidad para el DTO
+    public String getNombreCompleto() {
+        return nombre + " " + apellidos;
+    }
 }

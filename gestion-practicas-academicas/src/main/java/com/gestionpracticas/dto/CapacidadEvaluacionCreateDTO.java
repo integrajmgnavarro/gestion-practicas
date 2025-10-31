@@ -4,6 +4,7 @@ import lombok.Data;
 import jakarta.validation.constraints.*;
 @Data
 public class CapacidadEvaluacionCreateDTO {
+	private Long id;
     @NotBlank(message = "El nombre es obligatorio")
     @Size(max = 100, message = "El nombre no puede exceder 100 caracteres")
     private String nombre;

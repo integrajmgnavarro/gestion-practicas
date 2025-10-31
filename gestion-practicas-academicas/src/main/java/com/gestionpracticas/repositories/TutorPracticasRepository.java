@@ -1,6 +1,5 @@
 package com.gestionpracticas.repositories;
 
-import com.gestionpracticas.models.Empresa;
 import com.gestionpracticas.models.TutorPracticas;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -13,45 +12,31 @@ import java.util.Optional;
 @Repository
 public interface TutorPracticasRepository extends JpaRepository<TutorPracticas, Long> {
 
-    // Búsquedas básicas
     Optional<TutorPracticas> findByDni(String dni);
     Optional<TutorPracticas> findByEmail(String email);
-    Optional<TutorPracticas> findByUsuario_Id(Long usuarioId);
-
-    // Verificaciones de existencia
-    boolean existsByDni(String dni);
-    boolean existsByEmail(String email);
-
-    // Búsquedas por relaciones
-    List<TutorPracticas> findByEmpresa(Empresa empresa);
-    List<TutorPracticas> findByEmpresa_Id(Long empresaId);
-
-    List<TutorPracticas> findByCargo(String cargo);
-    List<TutorPracticas> findByCargoContainingIgnoreCase(String cargo);
-
-    // Búsquedas por estado
     List<TutorPracticas> findByActivo(Boolean activo);
 
-    // Búsquedas combinadas
-    List<TutorPracticas> findByEmpresa_IdAndActivo(Long empresaId, Boolean activo);
+    /**
+     * Verifica si existen alumnos asignados a este tutor.
+     */
+    @Query("SELECT CASE WHEN COUNT(a) > 0 THEN TRUE ELSE FALSE END FROM Alumno a WHERE a.tutorPracticas.id = :tutorId")
+    boolean existsByAlumnosIsNotEmpty(@Param("tutorId") Long tutorId);
 
-    // Consultas personalizadas con JPQL
-    @Query("SELECT COUNT(a) FROM TutorPracticas a WHERE a.empresa.id = :empresaId AND a.activo = true")
-    Long countTutorPracticasActivosByEmpresa(@Param("empresaId") Long empresaId);
+    /**
+     * Verifica si existen incidencias creadas por o asociadas a este tutor.
+     */
+    @Query("SELECT CASE WHEN COUNT(i) > 0 THEN TRUE ELSE FALSE END FROM Incidencia i WHERE i.tutorPracticas.id = :tutorId")
+    boolean existsByIncidenciasIsNotEmpty(@Param("tutorId") Long tutorId);
 
-    // Búsqueda con múltiples criterios
-    
-    @Query("SELECT tp FROM TutorPracticas tp WHERE " +
-           "(:nombre IS NULL OR LOWER(tp.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) AND " +
-           "(:apellidos IS NULL OR LOWER(tp.apellidos) LIKE LOWER(CONCAT('%', :apellidos, '%'))) AND " +
-           "(:dni IS NULL OR tp.dni = :dni) AND " +
-           "(:empresaId IS NULL OR tp.empresa.id = :empresaId) AND " +
-           "(:activo IS NULL OR tp.activo = :activo)")
-    List<TutorPracticas> findByMultipleCriteria(
-            @Param("nombre") String nombre,
-            @Param("apellidos") String apellidos,
-            @Param("dni") String dni,
-            @Param("empresaId") Long empresaId,
-            @Param("activo") Boolean activo
-    );
+    /**
+     * Verifica si existen evaluaciones asociadas a este tutor.
+     */
+    @Query("SELECT CASE WHEN COUNT(e) > 0 THEN TRUE ELSE FALSE END FROM Evaluacion e WHERE e.tutorPracticas.id = :tutorId")
+    boolean existsByEvaluacionesIsNotEmpty(@Param("tutorId") Long tutorId);
+
+    /**
+     * Verifica si existen evaluaciones de tutor (EvaluacionTutor) asociadas a este tutor.
+     */
+    @Query("SELECT CASE WHEN COUNT(et) > 0 THEN TRUE ELSE FALSE END FROM EvaluacionTutor et WHERE et.tutorPracticas.id = :tutorId")
+    boolean existsByEvaluacionesTutorIsNotEmpty(@Param("tutorId") Long tutorId);
 }

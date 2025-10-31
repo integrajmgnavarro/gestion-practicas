@@ -1,274 +1,146 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" 
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{common/layout}">
-<head>
-    <title>Nuevo Alumno</title>
-	
-	<!-- Carga del CDN de Tailwind CSS para el ejemplo (Normalmente iría en el layout principal) -->
-	<script src="https://cdn.tailwindcss.com"></script>
 
-	<!-- Bloque para CSS extra, si es necesario, inyectado en el layout principal -->
-	<th:block layout:fragment="extra-css">
-	    <!-- Puedes añadir estilos CSS personalizados aquí si las clases de Tailwind no son suficientes -->
-	</th:block>
+<html xmlns:th="http://www.thymeleaf.org"
+xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+layout:decorate="~{common/layout}">
+<head>
+<!-- Título Dinámico: Adapta el título si tiene ID (Editar) o no (Nuevo) -->
+<title th:text="${alumno.id != null ? 'Editar Alumno: ' + alumno.nombre : 'Nuevo Alumno'}">Formulario de Alumno</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<th:block layout:fragment="extra-css"></th:block>
 </head>
 <body>
-    <div layout:fragment="content">
-        <!-- Page Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
+<div layout:fragment="content" class="p-4 md:p-8">
+
+<!-- ENCABEZADO DINÁMICO -->
+<div class="bg-white p-6 rounded-xl shadow-xl mb-6 border-t-4 border-blue-600">
+    <h1 class="text-3xl font-extrabold text-gray-900 mb-1">
+        <i class="bi bi-person-circle text-blue-600 mr-2"></i>
+        <span th:text="${alumno.id != null ? 'Editar Alumno' : 'Registrar Nuevo Alumno'}">Título</span>
+    </h1>
+    <p class="text-gray-500 text-sm" 
+       th:text="${alumno.id != null ? 'Modifica los datos del alumno con ID: ' + alumno.id : 'Completa los campos para dar de alta un nuevo alumno.'}">
+       Descripción dinámica
+    </p>
+</div>
+
+<div class="bg-white shadow-xl rounded-xl p-6">
+    
+    <!-- FORMULARIO UNIFICADO: La acción es la misma, el ID oculto indica si es edición -->
+    <form th:action="@{/admin/alumnos/guardar}" th:object="${alumno}" method="post">
+        
+        <!-- ID Oculto (CRUCIAL para diferenciar Edición de Creación) -->
+        <input type="hidden" th:field="*{id}" />
+
+        <h2 class="text-xl font-semibold text-gray-800 border-b pb-2 mb-4"><i class="bi bi-person-fill text-blue-500 mr-2"></i>Datos Personales</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+            
+            <!-- Campo Nombre -->
             <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-person-plus-fill text-primary"></i>
-                    Nuevo Alumno
-                </h1>
-                <p class="text-muted mb-0">Completa el formulario para registrar un nuevo alumno</p>
+                <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre</label>
+                <input type="text" id="nombre" th:field="*{nombre}" required
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2.5"
+                       placeholder="Ej: Juan">
+                <p th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}" class="mt-1 text-sm text-red-600"></p>
             </div>
+
+            <!-- Campo Apellidos -->
             <div>
-                <a th:href="@{/admin/alumnos}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left"></i> Volver
-                </a>
+                <label for="apellidos" class="block text-sm font-medium text-gray-700">Apellidos</label>
+                <input type="text" id="apellidos" th:field="*{apellidos}" required
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2.5"
+                       placeholder="Ej: Pérez García">
+                <p th:if="${#fields.hasErrors('apellidos')}" th:errors="*{apellidos}" class="mt-1 text-sm text-red-600"></p>
+            </div>
+
+            <!-- Campo DNI -->
+            <div>
+                <label for="dni" class="block text-sm font-medium text-gray-700">DNI</label>
+                <input type="text" id="dni" th:field="*{dni}" required
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2.5"
+                       placeholder="Ej: 12345678A">
+                <p th:if="${#fields.hasErrors('dni')}" th:errors="*{dni}" class="mt-1 text-sm text-red-600"></p>
+            </div>
+            
+            <!-- Campo Email -->
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                <input type="email" id="email" th:field="*{email}" required
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2.5"
+                       placeholder="Ej: juan.perez@email.com">
+                <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="mt-1 text-sm text-red-600"></p>
             </div>
         </div>
 
-        <!-- Formulario -->
-        <form th:action="@{/admin/alumnos}" th:object="${alumnoCreateDTO}" method="post">
-            <div class="row">
-                <!-- Columna izquierda - Datos Personales -->
-                <div class="col-lg-6">
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h5 class="mb-0">
-                                <i class="bi bi-person-badge"></i> Datos Personales
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="nombre" class="form-label">Nombre <span class="text-danger">*</span></label>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           id="nombre" 
-                                           th:field="*{nombre}" 
-                                           th:classappend="${#fields.hasErrors('nombre')} ? 'is-invalid' : ''"
-                                           required>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}">Error</div>
-                                </div>
-
-                                <div class="col-md-6 mb-3">
-                                    <label for="apellidos" class="form-label">Apellidos <span class="text-danger">*</span></label>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           id="apellidos" 
-                                           th:field="*{apellidos}"
-                                           th:classappend="${#fields.hasErrors('apellidos')} ? 'is-invalid' : ''"
-                                           required>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('apellidos')}" th:errors="*{apellidos}">Error</div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="dni" class="form-label">DNI <span class="text-danger">*</span></label>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           id="dni" 
-                                           th:field="*{dni}"
-                                           th:classappend="${#fields.hasErrors('dni')} ? 'is-invalid' : ''"
-                                           maxlength="9"
-                                           pattern="[0-9]{8}[A-Za-z]{1}"
-                                           required>
-                                    <div class="form-text">Formato: 12345678A</div>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('dni')}" th:errors="*{dni}">Error</div>
-                                </div>
-
-                                <div class="col-md-6 mb-3">
-                                    <label for="fechaNacimiento" class="form-label">Fecha de Nacimiento <span class="text-danger">*</span></label>
-                                    <input type="date" 
-                                           class="form-control" 
-                                           id="fechaNacimiento" 
-                                           th:field="*{fechaNacimiento}"
-                                           th:classappend="${#fields.hasErrors('fechaNacimiento')} ? 'is-invalid' : ''"
-                                           required>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('fechaNacimiento')}" th:errors="*{fechaNacimiento}">Error</div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
-                                    <input type="email" 
-                                           class="form-control" 
-                                           id="email" 
-                                           th:field="*{email}"
-                                           th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''"
-                                           required>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Error</div>
-                                </div>
-
-                                <div class="col-md-6 mb-3">
-                                    <label for="telefono" class="form-label">Teléfono</label>
-                                    <input type="tel" 
-                                           class="form-control" 
-                                           id="telefono" 
-                                           th:field="*{telefono}"
-                                           placeholder="666123456">
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="password" class="form-label">Contraseña <span class="text-danger">*</span></label>
-                                <input type="password" 
-                                       class="form-control" 
-                                       id="password" 
-                                       th:field="*{password}"
-                                       th:classappend="${#fields.hasErrors('password')} ? 'is-invalid' : ''"
-                                       minlength="6"
-                                       required>
-                                <div class="form-text">Mínimo 6 caracteres</div>
-                                <div class="invalid-feedback" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Error</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Columna derecha - Datos de Prácticas -->
-                <div class="col-lg-6">
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h5 class="mb-0">
-                                <i class="bi bi-briefcase"></i> Datos de Prácticas
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="mb-3">
-                                <label for="cursoId" class="form-label">Curso <span class="text-danger">*</span></label>
-                                <select class="form-select" 
-                                        id="cursoId" 
-                                        th:field="*{cursoId}"
-                                        th:classappend="${#fields.hasErrors('cursoId')} ? 'is-invalid' : ''"
-                                        required>
-                                    <option value="">Seleccionar curso...</option>
-                                    <option th:each="curso : ${cursos}" 
-                                            th:value="${curso.id}" 
-                                            th:text="${curso.nombre}">Curso</option>
-                                </select>
-                                <div class="invalid-feedback" th:if="${#fields.hasErrors('cursoId')}" th:errors="*{cursoId}">Error</div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="empresaId" class="form-label">Empresa</label>
-                                <select class="form-select" 
-                                        id="empresaId" 
-                                        th:field="*{empresaId}">
-                                    <option value="">Sin asignar</option>
-                                    <option th:each="empresa : ${empresas}" 
-                                            th:value="${empresa.id}" 
-                                            th:text="${empresa.nombre}">Empresa</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="tutorPracticasId" class="form-label">Tutor de Prácticas</label>
-                                <select class="form-select" 
-                                        id="tutorPracticasId" 
-                                        th:field="*{tutorPracticasId}">
-                                    <option value="">Sin asignar</option>
-                                    <option th:each="tutor : ${tutoresPracticas}" 
-                                            th:value="${tutor.id}" 
-                                            th:text="${tutor.nombre + ' ' + tutor.apellidos + ' - ' + tutor.empresaNombre}">Tutor</option>
-                                </select>
-                                <div class="form-text">Se filtrará por empresa seleccionada</div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="fechaInicio" class="form-label">Fecha Inicio</label>
-                                    <input type="date" 
-                                           class="form-control" 
-                                           id="fechaInicio" 
-                                           th:field="*{fechaInicio}">
-                                </div>
-
-                                <div class="col-md-6 mb-3">
-                                    <label for="fechaFin" class="form-label">Fecha Fin</label>
-                                    <input type="date" 
-                                           class="form-control" 
-                                           id="fechaFin" 
-                                           th:field="*{fechaFin}">
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="duracionPracticas" class="form-label">Duración (días)</label>
-                                <input type="number" 
-                                       class="form-control" 
-                                       id="duracionPracticas" 
-                                       th:field="*{duracionPracticas}"
-                                       min="1"
-                                       placeholder="90">
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="horario" class="form-label">Horario</label>
-                                <textarea class="form-control" 
-                                          id="horario" 
-                                          th:field="*{horario}"
-                                          rows="3"
-                                          placeholder="Lunes a Viernes: 9:00 - 14:00"></textarea>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <h2 class="text-xl font-semibold text-gray-800 border-b pb-2 mt-6 mb-4"><i class="bi bi-book text-blue-500 mr-2"></i>Detalles Académicos</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            
+            <!-- Campo Curso (Necesita 'cursosDisponibles' en el modelo) -->
+            <div>
+                <label for="cursoId" class="block text-sm font-medium text-gray-700">Curso Asignado</label>
+                <select id="cursoId" th:field="*{cursoId}" required
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2.5">
+                    <option value="">-- Seleccione un Curso --</option>
+                    <option th:each="curso : ${cursosDisponibles}" 
+                            th:value="${curso.id}" 
+                            th:text="${curso.nombre + ' (' + curso.codigo + ')'}">
+                        Curso de Ejemplo (C001)
+                    </option>
+                </select>
+                <p th:if="${#fields.hasErrors('cursoId')}" th:errors="*{cursoId}" class="mt-1 text-sm text-red-600"></p>
             </div>
 
-            <!-- Botones de acción -->
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <a th:href="@{/admin/alumnos}" class="btn btn-outline-secondary">
-                            <i class="bi bi-x-circle"></i> Cancelar
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-save"></i> Guardar Alumno
-                        </button>
-                    </div>
-                </div>
+            <!-- Campo Empresa (Necesita 'empresasDisponibles' en el modelo) -->
+            <div>
+                <label for="empresaId" class="block text-sm font-medium text-gray-700">Empresa de Prácticas (Opcional)</label>
+                <select id="empresaId" th:field="*{empresaId}"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2.5">
+                    <option value="">-- No Asignar Empresa --</option>
+                    <option th:each="empresa : ${empresasDisponibles}" 
+                            th:value="${empresa.id}" 
+                            th:text="${empresa.nombre + ' (' + empresa.cif + ')'}">
+                        Empresa S.L. (A12345678)
+                    </option>
+                </select>
+                <p th:if="${#fields.hasErrors('empresaId')}" th:errors="*{empresaId}" class="mt-1 text-sm text-red-600"></p>
             </div>
-        </form>
-    </div>
+            
+            <!-- Campo Activo (Solo se muestra y es relevante en modo edición) -->
+            <div th:if="${alumno.id != null}">
+                <label for="activo" class="block text-sm font-medium text-gray-700">Estado del Alumno</label>
+                <select id="activo" th:field="*{activo}" required
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2.5">
+                    <option value="true">Activo</option>
+                    <option value="false">Inactivo</option>
+                </select>
+                <p th:if="${#fields.hasErrors('activo')}" th:errors="*{activo}" class="mt-1 text-sm text-red-600"></p>
+            </div>
 
-    <!-- Extra JS -->
-    <th:block layout:fragment="extra-js">
-        <script>
-            // Filtrar tutores por empresa
-            document.getElementById('empresaId').addEventListener('change', function() {
-                const empresaId = this.value;
-                const tutorSelect = document.getElementById('tutorPracticasId');
-                
-                if (!empresaId) {
-                    // Mostrar todos
-                    Array.from(tutorSelect.options).forEach(opt => {
-                        if (opt.value) opt.style.display = '';
-                    });
-                    return;
-                }
-                
-                // Filtrar por empresa (esto requeriría AJAX o datos precargados)
-                // Por ahora mostramos todos
-            });
+        </div>
 
-            // Validar fechas
-            document.getElementById('fechaFin').addEventListener('change', function() {
-                const fechaInicio = document.getElementById('fechaInicio').value;
-                const fechaFin = this.value;
-                
-                if (fechaInicio && fechaFin && new Date(fechaFin) < new Date(fechaInicio)) {
-                    alert('La fecha de fin no puede ser anterior a la fecha de inicio');
-                    this.value = '';
-                }
-            });
-        </script>
-    </th:block>
+        <!-- BOTONES DE ACCIÓN -->
+        <div class="pt-5 border-t mt-8 flex justify-end space-x-3">
+            
+            <!-- Botón Guardar/Actualizar (Texto dinámico) -->
+            <button type="submit" 
+                    class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i class="bi bi-save mr-2"></i>
+                <span th:text="${alumno.id != null ? 'Actualizar Alumno' : 'Guardar Alumno'}">Guardar</span>
+            </button>
+
+            <!-- Botón Cancelar -->
+            <a th:href="@{/admin/alumnos}"
+               class="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 transition duration-150">
+                <i class="bi bi-x-circle mr-2"></i> Volver al Listado
+            </a>
+        </div>
+    </form>
+</div>
+
+
+</div>
 </body>
 </html>

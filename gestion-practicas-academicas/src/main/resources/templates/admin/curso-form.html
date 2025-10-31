@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{common/layout}">
+<head>
+    <title th:text="${cursoCreateDTO.id == null} ? 'Crear Nuevo Curso' : 'Editar Curso #' + ${cursoCreateDTO.id}"></title>
+    </head>
+<body>
+<div layout:fragment="content" class="p-4 sm:p-6 lg:p-8">
+
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-extrabold text-gray-800 dark:text-white"
+            th:text="${cursoCreateDTO.id == null} ? 'Nuevo Curso' : 'Editar Curso'"></h1>
+        <a th:href="@{/admin/cursos}" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 text-base font-medium transition duration-200 ease-in-out">
+            <i class="bi bi-arrow-left mr-2"></i> Volver al Listado
+        </a>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
+        
+        <form th:action="@{/admin/cursos}" 
+              th:object="${cursoCreateDTO}" 
+              method="post" 
+              class="space-y-8">
+            
+            <input type="hidden" th:field="*{id}" />
+            <div th:if="${cursoCreateDTO.id != null}">
+                <input type="hidden" name="_method" value="put"/>
+            </div>
+
+            <div th:if="${#fields.hasAnyErrors()}" class="p-4 mx-8 mt-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-700/50 dark:text-red-400" role="alert">
+                <span class="font-medium">Error de validación:</span> Por favor, corrija los errores a continuación.
+            </div>
+            
+            
+            <div class="bg-indigo-50 dark:bg-indigo-900/20 p-6 border-b border-indigo-200 dark:border-indigo-900">
+                <h2 class="text-xl font-bold text-indigo-800 dark:text-indigo-300" th:text="${cursoCreateDTO.id == null} ? 'Definición del Nuevo Curso' : 'Detalles del Curso'"></h2>
+            </div>
+            
+            <div class="px-8 pb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <div class="form-group md:col-span-2">
+                    <label for="nombre" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre del Curso</label>
+                    <input type="text" th:field="*{nombre}" id="nombre" 
+                           class="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white sm:text-sm transition duration-150 ease-in-out"
+                           th:classappend="${#fields.hasErrors('nombre')} ? 'border-red-500'" required>
+                    <p th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}" class="mt-1 text-xs text-red-500 dark:text-red-400">Error Nombre</p>
+                </div>
+
+                <div class="form-group md:col-span-2">
+                    <label for="descripcion" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Descripción (Opcional)</label>
+                    <textarea th:field="*{descripcion}" id="descripcion" rows="3"
+                           class="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white sm:text-sm transition duration-150 ease-in-out"
+                           th:classappend="${#fields.hasErrors('descripcion')} ? 'border-red-500'"></textarea>
+                    <p th:if="${#fields.hasErrors('descripcion')}" th:errors="*{descripcion}" class="mt-1 text-xs text-red-500 dark:text-red-400">Error Descripción</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="duracion" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Duración (en horas)</label>
+                    <input type="number" th:field="*{duracion}" id="duracion" 
+                           class="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white sm:text-sm transition duration-150 ease-in-out"
+                           th:classappend="${#fields.hasErrors('duracion')} ? 'border-red-500'" required>
+                    <p th:if="${#fields.hasErrors('duracion')}" th:errors="*{duracion}" class="mt-1 text-xs text-red-500 dark:text-red-400">Error Duración</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="tutorCursoId" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tutor/Profesor Responsable</label>
+                    <select th:field="*{tutorCursoId}" id="tutorCursoId" 
+                            class="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white sm:text-sm transition duration-150 ease-in-out"
+                            th:classappend="${#fields.hasErrors('tutorCursoId')} ? 'border-red-500'">
+                        <option value="">-- Sin Asignar --</option>
+                        <option th:each="tutor : ${tutorCursoDTOs}" 
+                                th:value="${tutor.id}" 
+                                th:text="${tutor.nombre + ' ' + tutor.apellidos}"></option> 
+                    </select>
+                    <p th:if="${#fields.hasErrors('tutorCursoId')}" th:errors="*{tutorCursoId}" class="mt-1 text-xs text-red-500 dark:text-red-400">Error Tutor</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="fechaInicio" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Fecha de Inicio</label>
+                    <input type="date" th:field="*{fechaInicio}" id="fechaInicio" 
+                           class="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white sm:text-sm transition duration-150 ease-in-out"
+                           th:classappend="${#fields.hasErrors('fechaInicio')} ? 'border-red-500'">
+                    <p th:if="${#fields.hasErrors('fechaInicio')}" th:errors="*{fechaInicio}" class="mt-1 text-xs text-red-500 dark:text-red-400">Error Fecha</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="fechaFin" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Fecha de Fin</label>
+                    <input type="date" th:field="*{fechaFin}" id="fechaFin" 
+                           class="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white sm:text-sm transition duration-150 ease-in-out"
+                           th:classappend="${#fields.hasErrors('fechaFin')} ? 'border-red-500'">
+                    <p th:if="${#fields.hasErrors('fechaFin')}" th:errors="*{fechaFin}" class="mt-1 text-xs text-red-500 dark:text-red-400">Error Fecha</p>
+                </div>
+                
+            </div>
+            
+            <div class="px-8 pt-4 pb-8 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex items-center">
+                    <input id="activo" type="checkbox" th:field="*{activo}" class="h-5 w-5 text-indigo-600 border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500 dark:focus:ring-indigo-500">
+                    <label for="activo" class="ml-2 block text-base font-medium text-gray-700 dark:text-gray-300">Curso Activo</label>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 dark:bg-gray-700/50 px-8 py-4 flex justify-end space-x-4">
+                <a th:href="@{/admin/cursos}" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-150 ease-in-out">Cancelar</a>
+                <button type="submit" class="px-6 py-2 border border-transparent rounded-lg shadow-md text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                    <span th:text="${cursoCreateDTO.id == null} ? 'Crear Curso' : 'Actualizar Curso'">Guardar</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

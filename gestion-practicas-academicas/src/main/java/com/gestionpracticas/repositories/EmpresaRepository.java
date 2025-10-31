@@ -12,50 +12,27 @@ import java.util.Optional;
 @Repository
 public interface EmpresaRepository extends JpaRepository<Empresa, Long> {
 
-    // =============================
-    // 🔹 BÚSQUEDAS BÁSICAS
-    // =============================
-
+    /**
+     * Busca una empresa por su CIF para garantizar la unicidad.
+     */
     Optional<Empresa> findByCif(String cif);
-    List<Empresa> findByNombreContainingIgnoreCase(String nombre);
-    Optional<Empresa> findByEmail(String email);
 
-    // =============================
-    // 🔹 VERIFICACIONES
-    // =============================
-
-    boolean existsByCif(String cif);
-    boolean existsByEmail(String email);
-
-    // =============================
-    // 🔹 FILTROS DE ESTADO
-    // =============================
-
+    /**
+     * Busca empresas por estado (activo/inactivo).
+     */
     List<Empresa> findByActivo(Boolean activo);
 
-    // =============================
-    // 🔹 CONSULTAS PERSONALIZADAS
-    // =============================
+    /**
+     * Verifica si existen alumnos asociados a esta empresa.
+     * Crucial para la regla de negocio de eliminación.
+     */
+    @Query("SELECT CASE WHEN COUNT(a) > 0 THEN TRUE ELSE FALSE END FROM Alumno a WHERE a.empresa.id = :empresaId")
+    boolean existsByAlumnosIsNotEmpty(@Param("empresaId") Long empresaId);
 
-    @Query("SELECT COUNT(e) FROM Empresa e WHERE e.activo = true")
-    Long countEmpresasActivas();
-
-    @Query("SELECT e FROM Empresa e WHERE e.activo = true AND LOWER(e.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))")
-    List<Empresa> searchEmpresasActivasByNombre(@Param("nombre") String nombre);
-
-    // =============================
-    // 🔹 BÚSQUEDA MULTICRITERIO
-    // =============================
-
-    @Query("SELECT e FROM Empresa e WHERE " +
-           "(:nombre IS NULL OR LOWER(e.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) AND " +
-           "(:cif IS NULL OR e.cif = :cif) AND " +
-           "(:email IS NULL OR e.email = :email) AND " +
-           "(:activo IS NULL OR e.activo = :activo)")
-    List<Empresa> findByMultipleCriteria(
-            @Param("nombre") String nombre,
-            @Param("cif") String cif,
-            @Param("email") String email,
-            @Param("activo") Boolean activo
-    );
+    /**
+     * Verifica si existen tutores de prácticas asociados a esta empresa.
+     * Crucial para la regla de negocio de eliminación.
+     */
+    @Query("SELECT CASE WHEN COUNT(t) > 0 THEN TRUE ELSE FALSE END FROM TutorPracticas t WHERE t.empresa.id = :empresaId")
+    boolean existsByTutoresPracticasIsNotEmpty(@Param("empresaId") Long empresaId);
 }

@@ -10,6 +10,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "tutor_curso")
@@ -47,10 +48,11 @@ public class TutorCurso {
     @Column(length = 15)
     private String telefono;
 
-    @Size(max = 100, message = "La especialidad no puede exceder 100 caracteres")
-    @Column(length = 100)
-    private String especialidad;
+    @Size(max = 100, message = "El departamento es obligatorio")
+    @Column(nullable = false, length = 100)
+    private String departamento; // Departamento o área dentro del centro educativo
 
+    // Metadatos
     @Column(nullable = false)
     private Boolean activo = true;
 
@@ -64,10 +66,10 @@ public class TutorCurso {
 
     // Relaciones
     @OneToMany(mappedBy = "tutorCurso", cascade = CascadeType.ALL)
-    private List<Curso> cursos;
+    private List<Curso> cursos = new ArrayList<>();
 
     @OneToMany(mappedBy = "tutorCurso", cascade = CascadeType.ALL)
-    private List<EvaluacionTutor> evaluaciones;
+    private List<Alumno> alumnos = new ArrayList<>();
 
     @OneToOne(mappedBy = "tutorCurso")
     private Usuario usuario;

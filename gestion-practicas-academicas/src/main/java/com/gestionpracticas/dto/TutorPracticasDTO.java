@@ -3,7 +3,7 @@ package com.gestionpracticas.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.time.LocalDate;
+
 import java.time.LocalDateTime;
 
 @Data
@@ -11,24 +11,21 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class TutorPracticasDTO {
     private Long id;
-    private Long usuarioId;
     private String nombre;
     private String apellidos;
     private String dni;
-    private LocalDate fechaNacimiento;
     private String email;
     private String telefono;
-    private String cargo;
     
-    //Datos Prácticas
-    private String horario;
-    
-    // Datos de relaciones (solo IDs y nombres básicos)
+    // Atributos de la entidad TutorPracticas
+    private String cargo;   // <-- Campo añadido
+    private String horario; // <-- Campo añadido
+
+    // Relación con Empresa
     private Long empresaId;
-    private String empresaNombre;
-    
-    // Metadata
+    private String empresaNombre; // Para la visualización
+
+    // Metadatos
     private Boolean activo;
     private LocalDateTime fechaCreacion;
-    private LocalDateTime fechaActualizacion;
 }

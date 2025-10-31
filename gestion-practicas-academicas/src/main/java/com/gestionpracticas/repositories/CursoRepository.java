@@ -1,60 +1,36 @@
 package com.gestionpracticas.repositories;
 
 import com.gestionpracticas.models.Curso;
-import com.gestionpracticas.models.TutorCurso;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
+import java.util.List;
 
 @Repository
 public interface CursoRepository extends JpaRepository<Curso, Long> {
 
-    // =============================
-    // 🔹 BÚSQUEDAS BÁSICAS
-    // =============================
+    /**
+     * Verifica si ya existe un curso con el código especificado.
+     */
+    boolean existsByCodigo(String codigo);
 
-    Optional<Curso> findByNombre(String nombre);
-    List<Curso> findByNombreContainingIgnoreCase(String nombre);
-
-    // =============================
-    // 🔹 RELACIONES
-    // =============================
-
-    List<Curso> findByTutorCurso(TutorCurso tutorCurso);
+    /**
+     * Busca un curso por su código. Útil para validación en la actualización.
+     */
+    Optional<Curso> findByCodigo(String codigo);
+    
+    /**
+     * Busca cursos por ID de Tutor de Curso.
+     */
     List<Curso> findByTutorCurso_Id(Long tutorCursoId);
 
-    // =============================
-    // 🔹 FILTROS DE ESTADO
-    // =============================
+    /**
+     * Verifica si el curso tiene alumnos asociados para prevenir la eliminación.
+     */
+    @Query("SELECT CASE WHEN COUNT(a) > 0 THEN TRUE ELSE FALSE END FROM Alumno a WHERE a.curso.id = :cursoId")
+    boolean hasAlumnos(@Param("cursoId") Long cursoId);
 
-    List<Curso> findByActivo(Boolean activo);
-    List<Curso> findByTutorCurso_IdAndActivo(Long tutorCursoId, Boolean activo);
-
-    // =============================
-    // 🔹 CONSULTAS PERSONALIZADAS
-    // =============================
-
-    @Query("SELECT COUNT(c) FROM Curso c WHERE c.activo = true")
-    Long countCursosActivos();
-
-    @Query("SELECT COUNT(c) FROM Curso c WHERE c.tutorCurso.id = :tutorCursoId AND c.activo = true")
-    Long countCursosActivosByTutor(@Param("tutorCursoId") Long tutorCursoId);
-
-    // =============================
-    // 🔹 BÚSQUEDA MULTICRITERIO
-    // =============================
-
-    @Query("SELECT c FROM Curso c WHERE " +
-           "(:nombre IS NULL OR LOWER(c.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) AND " +
-           "(:tutorCursoId IS NULL OR c.tutorCurso.id = :tutorCursoId) AND " +
-           "(:activo IS NULL OR c.activo = :activo)")
-    List<Curso> findByMultipleCriteria(
-            @Param("nombre") String nombre,
-            @Param("tutorCursoId") Long tutorCursoId,
-            @Param("activo") Boolean activo
-    );
 }

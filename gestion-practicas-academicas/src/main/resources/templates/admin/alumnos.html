@@ -1,262 +1,247 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" 
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{common/layout}">
+      layout:decorate="~{common/layout}"> 
 <head>
     <title>Gestión de Alumnos</title>
 	
-	<!-- Carga del CDN de Tailwind CSS para el ejemplo (Normalmente iría en el layout principal) -->
 	<script src="https://cdn.tailwindcss.com"></script>
-
-	<!-- Bloque para CSS extra, si es necesario, inyectado en el layout principal -->
-	<th:block layout:fragment="extra-css">
-	    <!-- Puedes añadir estilos CSS personalizados aquí si las clases de Tailwind no son suficientes -->
-	</th:block>
+	    
+	    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+	    
+	    <th:block layout:fragment="extra-css">
 </head>
 <body>
-    <div layout:fragment="content">
-        <!-- Page Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
+    <div layout:fragment="content" class="p-4 md:p-8">
+        
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-xl shadow-xl mb-6 border-t-4 border-blue-600">
             <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-people-fill text-primary"></i>
+                <h1 class="text-3xl font-extrabold text-gray-900 mb-1">
+                    <i class="bi bi-people-fill text-blue-600 mr-2"></i>
                     Gestión de Alumnos
                 </h1>
-                <p class="text-muted mb-0">Listado completo de alumnos del sistema</p>
+                <p class="text-gray-500 text-sm">Listado completo de alumnos del sistema</p>
             </div>
-            <div>
-                <a th:href="@{/admin/alumnos/nuevo}" class="btn btn-primary">
-                    <i class="bi bi-plus-circle"></i> Nuevo Alumno
-                </a>
-            </div>
-        </div>
-
-        <!-- Filtros y Búsqueda -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <form th:action="@{/admin/alumnos}" method="get" class="row g-3">
-                    <div class="col-md-3">
-                        <label class="form-label">Nombre</label>
-                        <input type="text" class="form-control" name="nombre" placeholder="Buscar por nombre...">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Apellidos</label>
-                        <input type="text" class="form-control" name="apellidos" placeholder="Buscar por apellidos...">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">DNI</label>
-                        <input type="text" class="form-control" name="dni" placeholder="DNI...">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Estado</label>
-                        <select class="form-select" name="activo">
-                            <option value="">Todos</option>
-                            <option value="true">Activos</option>
-                            <option value="false">Inactivos</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-search"></i> Buscar
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Estadísticas rápidas -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card stat-card">
-                    <div class="card-body text-center">
-                        <h6 class="text-muted">Total Alumnos</h6>
-                        <h3 th:text="${alumnos?.size() ?: 0}">0</h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card stat-card success">
-                    <div class="card-body text-center">
-                        <h6 class="text-muted">Activos</h6>
-                        <h3 th:text="${alumnos != null ? #lists.size(alumnos.?[activo]) : 0}">0</h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card stat-card warning">
-                    <div class="card-body text-center">
-                        <h6 class="text-muted">Con Empresa</h6>
-                        <h3 th:text="${alumnos != null ? #lists.size(alumnos.?[empresaId != null]) : 0}">0</h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card stat-card danger">
-                    <div class="card-body text-center">
-                        <h6 class="text-muted">Sin Asignar</h6>
-                        <h3 th:text="${alumnos != null ? #lists.size(alumnos.?[empresaId == null]) : 0}">0</h3>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tabla de Alumnos -->
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">
-                    <i class="bi bi-table"></i> Lista de Alumnos
-                </h5>
+			<div class="mt-4 sm:mt-0 flex space-x-2"> 
+			    
+			    <a th:href="@{/admin/alumnos/nuevo}" 
+			       class="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+			        <i class="bi bi-plus-circle mr-2"></i> Nuevo Alumno
+			    </a>
+			    
+			    <a href="/admin/dashboard" 
+			       class="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-indigo-500 hover:bg-indigo-600 transition duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400">
+			        Dashboard Principal 
+			    </a>
+			</div>
+			</div>
+        <div class="bg-white shadow-xl rounded-xl p-6 mb-6">
+            <form th:action="@{/admin/alumnos}" method="get" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                
                 <div>
-                    <button class="btn btn-sm btn-outline-success" onclick="exportarExcel()">
-                        <i class="bi bi-file-earmark-excel"></i> Exportar
+                    <label class="block text-sm font-medium text-gray-700">Nombre</label>
+                    <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" 
+                           name="nombre" th:value="${param.nombre}" placeholder="Buscar por nombre...">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Apellidos</label>
+                    <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" 
+                           name="apellidos" th:value="${param.apellidos}" placeholder="Buscar por apellidos...">
+                </div>
+				
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">DNI</label>
+                    <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" 
+                           name="dni" th:value="${param.dni}" placeholder="DNI...">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Estado</label>
+                    <select class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" 
+                            name="activo">
+                        <option value="" th:selected="${param.activo == null or param.activo.isEmpty()}">Todos</option>
+                        <option value="true" th:selected="${param.activo == 'true'}">Activos</option>
+                        <option value="false" th:selected="${param.activo == 'false'}">Inactivos</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <button type="submit" class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="bi bi-search mr-2"></i> Buscar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            
+            <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500 hover:shadow-lg transition duration-200">
+                <h6 class="text-sm font-medium text-gray-500">Total Alumnos</h6>
+                <h3 class="text-3xl font-extrabold text-gray-900" 
+                    th:text="${alumnos?.size() ?: 0}">0</h3>
+            </div>
+            
+            <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-green-500 hover:shadow-lg transition duration-200">
+                <h6 class="text-sm font-medium text-gray-500">Activos</h6>
+                <h3 class="text-3xl font-extrabold text-gray-900" 
+                    th:text="${alumnos != null ? alumnos.?[activo].size() : 0}">0</h3>
+            </div>
+            
+            <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-yellow-500 hover:shadow-lg transition duration-200">
+                <h6 class="text-sm font-medium text-gray-500">Con Empresa</h6>
+                <h3 class="text-3xl font-extrabold text-gray-900" 
+				    th:text="${alumnos != null ? alumnos.?[empresaId != null].size() : 0}">0</h3>
+            </div>
+            
+            <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-red-500 hover:shadow-lg transition duration-200">
+                <h6 class="text-sm font-medium text-gray-500">Sin Asignar</h6>
+                <h3 class="text-3xl font-extrabold text-gray-900" 
+                    th:text="${alumnos != null ? alumnos.?[empresaId == null].size() : 0}">0</h3>
+            </div>
+        </div>
+
+        <div class="bg-white shadow-xl rounded-xl">
+            <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                <h2 class="text-lg font-bold text-gray-700">
+                    <i class="bi bi-table mr-2 text-gray-600"></i> Lista de Alumnos
+                </h2>
+                <div>
+                    <button class="px-3 py-1 text-sm font-medium text-green-700 bg-green-100 border border-green-300 rounded-md hover:bg-green-200 transition duration-150" 
+                            onclick="exportarExcel()">
+                        <i class="bi bi-file-earmark-excel mr-1"></i> Exportar
                     </button>
                 </div>
             </div>
-            <div class="card-body">
-                <div th:if="${#lists.isEmpty(alumnos)}" class="text-center text-muted py-5">
-                    <i class="bi bi-inbox" style="font-size: 4rem;"></i>
-                    <p class="mt-3 mb-0">No hay alumnos registrados</p>
-                    <a th:href="@{/admin/alumnos/nuevo}" class="btn btn-primary mt-3">
-                        <i class="bi bi-plus-circle"></i> Crear Primer Alumno
+            
+            <div class="p-6">
+                <div th:if="${alumnos == null or #lists.isEmpty(alumnos)}" class="text-center text-gray-500 py-10">
+                    <i class="bi bi-inbox text-6xl text-gray-300"></i>
+                    <p class="mt-3 mb-0 text-lg font-semibold">No hay alumnos registrados</p>
+                    <a th:href="@{/admin/alumnos/nuevo}" class="mt-4 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                        <i class="bi bi-plus-circle mr-2"></i> Crear Primer Alumno
                     </a>
                 </div>
 
-                <div class="table-responsive" th:if="${!#lists.isEmpty(alumnos)}">
-                    <table class="table table-hover align-middle" id="tablaAlumnos">
-                        <thead>
+                <div class="overflow-x-auto" th:if="${alumnos != null and !#lists.isEmpty(alumnos)}">
+                	<table class="w-full min-w-max divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
                             <tr>
-                                <th>DNI</th>
-                                <th>Nombre Completo</th>
-                                <th>Email</th>
-                                <th>Curso</th>
-                                <th>Empresa</th>
-                                <th>Estado</th>
-                                <th class="text-end">Acciones</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DNI</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre Completo</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Curso</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Empresa</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr th:each="alumno : ${alumnos}">
-                                <td>
-                                    <span class="badge bg-secondary" th:text="${alumno.dni}">DNI</span>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr th:each="alumno : ${alumnos}" class="hover:bg-gray-50 transition duration-150">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    <span class="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800" 
+                                          th:text="${alumno.dni}">DNI</span>
                                 </td>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="avatar-circle bg-primary text-white me-2">
+                                
+                                <td class="px-6 py-4"> <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10 bg-blue-500 text-white rounded-full flex items-center justify-center text-base font-semibold">
                                             <span th:text="${#strings.substring(alumno.nombre, 0, 1)}">A</span>
                                         </div>
-                                        <div>
-                                            <strong th:text="${alumno.nombre + ' ' + alumno.apellidos}">Nombre</strong>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-semibold text-gray-900" 
+                                                 th:text="${alumno.nombre + ' ' + alumno.apellidos}">Nombre Apellido</div>
+                                            <div class="text-sm text-gray-500" 
+                                                 th:text="${alumno.email}">email@example.com</div>
                                         </div>
                                     </div>
                                 </td>
-                                <td>
-                                    <small th:text="${alumno.email}">email@example.com</small>
+                                
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" 
+                                    th:text="${alumno.cursoNombre ?: 'N/A'}">Curso X</td>
+                                    
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <div th:if="${alumno.empresaId != null}" 
+                                         th:text="${alumno.empresaNombre}">Empresa S.L.</div>
+                                    <div th:unless="${alumno.empresaId != null}" 
+                                         class="text-red-500 font-medium">Sin asignar</div>
                                 </td>
-                                <td>
-                                    <span th:if="${alumno.cursoNombre}" th:text="${alumno.cursoNombre}">Curso</span>
-                                    <span th:unless="${alumno.cursoNombre}" class="text-muted">-</span>
-                                </td>
-                                <td>
-                                    <span th:if="${alumno.empresaNombre}">
-                                        <i class="bi bi-building"></i>
-                                        <span th:text="${alumno.empresaNombre}">Empresa</span>
+                                
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span th:if="${alumno.activo}" 
+                                          class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        Activo
                                     </span>
-                                    <span th:unless="${alumno.empresaNombre}" class="text-muted">Sin asignar</span>
-                                </td>
-                                <td>
-                                    <span th:if="${alumno.activo}" class="badge bg-success">
-                                        <i class="bi bi-check-circle"></i> Activo
-                                    </span>
-                                    <span th:unless="${alumno.activo}" class="badge bg-secondary">
-                                        <i class="bi bi-x-circle"></i> Inactivo
+                                    <span th:unless="${alumno.activo}" 
+                                          class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                        Inactivo
                                     </span>
                                 </td>
-                                <td class="text-end table-actions">
-                                    <div class="btn-group" role="group">
-                                        <a th:href="@{/admin/alumnos/{id}(id=${alumno.id})}" 
-                                           class="btn btn-sm btn-outline-info"
-                                           title="Ver detalle">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        <a th:href="@{/admin/alumnos/{id}/editar(id=${alumno.id})}" 
-                                           class="btn btn-sm btn-outline-primary"
-                                           title="Editar">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                        <button type="button" 
-                                                class="btn btn-sm btn-outline-danger"
-                                                onclick="confirmarEliminar('[[${alumno.id}]]', '[[${alumno.nombre}]]')"
+                                
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <a th:href="@{/admin/alumnos/{id}/editar(id=${alumno.id})}" 
+                                       class="text-blue-600 hover:text-blue-900 transition duration-150 mr-3" 
+                                       title="Ver/Editar">
+                                        <i class="bi bi-pencil-square text-lg"></i>
+                                    </a>
+                                    <form th:action="@{/admin/alumnos/eliminar/{id}(id=${alumno.id})}" method="post" 
+                                          class="inline-block" 
+                                          onsubmit="return confirm('¿Estás seguro de que quieres eliminar a este alumno?');">
+                                        <button type="submit" 
+                                                class="text-red-600 hover:text-red-900 transition duration-150" 
                                                 title="Eliminar">
-                                            <i class="bi bi-trash"></i>
+                                            <i class="bi bi-trash-fill text-lg"></i>
                                         </button>
-                                    </div>
+                                    </form>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
-        </div>
-
-        <!-- Modal de confirmación de eliminación -->
-        <div class="modal fade" id="modalEliminar" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header bg-danger text-white">
-                        <h5 class="modal-title">
-                            <i class="bi bi-exclamation-triangle"></i> Confirmar Eliminación
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>¿Estás seguro de que deseas eliminar al alumno <strong id="nombreAlumno"></strong>?</p>
-                        <p class="text-danger">
-                            <i class="bi bi-exclamation-triangle"></i>
-                            Esta acción no se puede deshacer y eliminará todos los datos asociados.
-                        </p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <form id="formEliminar" method="post" style="display: inline;">
-                            <input type="hidden" name="_method" value="delete">
-                            <button type="submit" class="btn btn-danger">
-                                <i class="bi bi-trash"></i> Eliminar
-                            </button>
-                        </form>
-                    </div>
+            
+            <div th:if="${alumnosPage != null and alumnosPage.totalPages > 0}" 
+                 class="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 pt-4 border-t border-gray-200 p-6">
+                
+                <div class="text-sm text-gray-700">
+                    Mostrando 
+                    <span class="font-semibold" th:text="${alumnosPage.number * alumnosPage.size + 1}">1</span>
+                    a
+                    <span class="font-semibold" th:text="${alumnosPage.number * alumnosPage.size + alumnosPage.numberOfElements}">10</span>
+                    de
+                    <span class="font-semibold" th:text="${alumnosPage.totalElements}">100</span>
+                    resultados
                 </div>
+
+                <nav class="flex items-center space-x-1" aria-label="Pagination">
+                    
+                    <a th:href="@{/admin/alumnos(page=${alumnosPage.number - 1}, size=${alumnosPage.size}, nombre=${param.nombre}, apellidos=${param.apellidos}, dni=${param.dni}, activo=${param.activo})}"
+                       th:classappend="${alumnosPage.first} ? 'pointer-events-none opacity-50' : ''"
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50">
+                        <i class="bi bi-arrow-left mr-2"></i>
+                        Anterior
+                    </a>
+
+                    <div th:with="currentPage=${alumnosPage.number}, totalPages=${alumnosPage.totalPages}">
+                        <span th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                            <a th:if="${i >= currentPage - 2 and i <= currentPage + 2}"
+                               th:href="@{/admin/alumnos(page=${i}, size=${alumnosPage.size}, nombre=${param.nombre}, apellidos=${param.apellidos}, dni=${param.dni}, activo=${param.activo})}"
+                               th:classappend="${i == currentPage} ? 'bg-blue-600 text-white hover:bg-blue-700 border-blue-600' : 'text-gray-700 bg-white hover:bg-gray-50 border-gray-300'"
+                               class="hidden md:inline-flex items-center px-4 py-2 border text-sm font-medium rounded-lg">
+                                <span th:text="${i + 1}">1</span>
+                            </a>
+                            <span th:if="${i == currentPage - 3 and currentPage > 3}" class="hidden md:inline-flex items-center px-4 py-2 text-sm text-gray-700">...</span>
+                            <span th:if="${i == currentPage + 3 and currentPage < totalPages - 4}" class="hidden md:inline-flex items-center px-4 py-2 text-sm text-gray-700">...</span>
+                        </span>
+                    </div>
+                    
+                    <a th:href="@{/admin/alumnos(page=${alumnosPage.number + 1}, size=${alumnosPage.size}, nombre=${param.nombre}, apellidos=${param.apellidos}, dni=${param.dni}, activo=${param.activo})}"
+                       th:classappend="${alumnosPage.last} ? 'pointer-events-none opacity-50' : ''"
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50">
+                        Siguiente
+                        <i class="bi bi-arrow-right ml-2"></i>
+                    </a>
+                </nav>
             </div>
         </div>
     </div>
-
-    <!-- Extra CSS -->
-    <th:block layout:fragment="extra-css">
-        <style>
-            .avatar-circle {
-                width: 35px;
-                height: 35px;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: bold;
-            }
-        </style>
-    </th:block>
-
-    <!-- Extra JS -->
-    <th:block layout:fragment="extra-js">
-        <script th:inline="javascript">
-            function confirmarEliminar(id, nombre) {
-                document.getElementById('nombreAlumno').textContent = nombre;
-                document.getElementById('formEliminar').action = '/admin/alumnos/' + id;
-                new bootstrap.Modal(document.getElementById('modalEliminar')).show();
-            }
-
-            function exportarExcel() {
-                window.location.href = '/reportes/exportar/todos-alumnos?formato=excel';
-            }
-        </script>
-    </th:block>
 </body>
 </html>

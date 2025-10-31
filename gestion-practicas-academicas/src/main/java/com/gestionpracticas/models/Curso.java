@@ -26,6 +26,12 @@ public class Curso {
     @Size(max = 100, message = "El nombre no puede exceder 100 caracteres")
     @Column(nullable = false, length = 100)
     private String nombre;
+    
+    // Campo añadido: Código del curso (generalmente único)
+    @NotBlank(message = "El código es obligatorio")
+    @Size(max = 20, message = "El código no puede exceder 20 caracteres")
+    @Column(nullable = false, length = 20, unique = true)
+    private String codigo;
 
     @Size(max = 500, message = "La descripción no puede exceder 500 caracteres")
     @Column(length = 500)
@@ -52,7 +58,9 @@ public class Curso {
     @Column(name = "fecha_creacion", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
 
-    // Relaciones
-    @OneToMany(mappedBy = "curso", cascade = CascadeType.ALL)
+    // Relaciones - CAMBIO CRÍTICO: Eliminamos CascadeType.ALL.
+    // Para eliminar un curso, la lógica de negocio debe forzar a que
+    // la lista de alumnos esté vacía primero, para evitar eliminación masiva.
+    @OneToMany(mappedBy = "curso", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Alumno> alumnos;
 }

@@ -113,7 +113,8 @@ public class AlumnoController {
         }
 
         // AlumnoDTO alumno = alumnoService.getAlumnoById(alumnoId); // No es necesario obtenerlo solo para el ID
-        alumnoService.updateAlumno(alumnoId, updateDTO);
+        updateDTO.setId(alumnoId);
+        alumnoService.updateAlumno(updateDTO);
 
         // model.addAttribute("message", "Perfil actualizado correctamente"); // Usar flash attributes para redirecciones
         return "redirect:/alumno/perfil?success=true";
@@ -216,17 +217,17 @@ public class AlumnoController {
     @PutMapping("/perfil/api")
     @ResponseBody
     public ResponseEntity<AlumnoDTO> updatePerfilApi(@AuthenticationPrincipal UserDetails userDetails,
-                                                     @Valid @RequestBody AlumnoUpdateDTO updateDTO) {
-        Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        Long alumnoId = usuario.getReferenceId(); // Usar reference_id
-
-        // AlumnoDTO alumno = alumnoService.getAlumnoById(alumnoId); // No es necesario obtenerlo
-        AlumnoDTO updated = alumnoService.updateAlumno(alumnoId, updateDTO);
-
-        return ResponseEntity.ok(updated);
-    }
-
+            @Valid @RequestBody AlumnoUpdateDTO updateDTO) {
+			Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername())
+			.orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+			Long alumnoId = usuario.getReferenceId(); // Usar reference_id
+			
+			// 👇 CORRECCIÓN FINAL
+			updateDTO.setId(alumnoId); // 1. Asignamos el ID al DTO
+			AlumnoDTO updated = alumnoService.updateAlumno(updateDTO); // 2. Llamamos con la firma corregida
+			
+			return ResponseEntity.ok(updated);
+}
     /**
      * GET /alumno/evaluaciones/api
      * Obtiene las evaluaciones del alumno (JSON)

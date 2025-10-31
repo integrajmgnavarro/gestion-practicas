@@ -81,9 +81,15 @@ public class ApiController {
     @PutMapping("/alumnos/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'ALUMNO')")
     public ResponseEntity<AlumnoDTO> updateAlumno(@PathVariable Long id,
-                                                  @Valid @RequestBody AlumnoUpdateDTO updateDTO) {
-        AlumnoDTO alumno = alumnoService.updateAlumno(id, updateDTO);
-        return ResponseEntity.ok(alumno);
+            @Valid @RequestBody AlumnoUpdateDTO updateDTO) {
+		
+			// 1. Asignar el ID de la ruta al DTO
+			updateDTO.setId(id); 
+			
+			// 2. Llamar al servicio con la nueva firma de un solo argumento
+			AlumnoDTO alumno = alumnoService.updateAlumno(updateDTO); 
+			
+			return ResponseEntity.ok(alumno);
     }
 
     /**

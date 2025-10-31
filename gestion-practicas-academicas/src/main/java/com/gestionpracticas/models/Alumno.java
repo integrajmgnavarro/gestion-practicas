@@ -39,6 +39,7 @@ public class Alumno {
     @Column(nullable = false, unique = true, length = 9)
     private String dni;
 
+    @Temporal(TemporalType.DATE)
     @NotNull(message = "La fecha de nacimiento es obligatoria")
     @Column(nullable = false)
     private LocalDate fechaNacimiento;
@@ -92,7 +93,7 @@ public class Alumno {
     private TutorPracticas tutorPracticas;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tutor_curso_id")
+    @JoinColumn(name = "tutor_curso_id", nullable = true)
     private TutorCurso tutorCurso;
 
     @OneToOne(mappedBy = "alumno")

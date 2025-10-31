@@ -7,6 +7,7 @@ import java.time.LocalDate;
 
 @Data
 public class EvaluacionTutorCreateDTO {
+	private Long id;
     @NotNull(message = "El tutor de prácticas es obligatorio")
     private Long tutorPracticasId;
     

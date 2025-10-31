@@ -6,6 +6,7 @@ import lombok.Data;
 
 @Data
 public class UsuarioCreateDTO {
+	private Long id;
     @NotBlank(message = "El email es obligatorio")
     @Email(message = "El email debe ser válido")
     private String email;

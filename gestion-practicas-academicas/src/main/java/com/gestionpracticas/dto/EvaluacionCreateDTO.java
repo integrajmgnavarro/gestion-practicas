@@ -7,6 +7,7 @@ import java.time.LocalDate;
 
 @Data
 public class EvaluacionCreateDTO {
+	private Long id;
     @NotNull(message = "El alumno es obligatorio")
     private Long alumnoId;
     

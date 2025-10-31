@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{common/layout}">
+<head>
+    <title>Gestión de Cursos</title>
+</head>
+<body>
+    <div layout:fragment="content" class="p-4 sm:p-6 lg:p-8">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+            <div class="mb-4 md:mb-0">
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
+                    <i class="bi bi-mortarboard-fill text-indigo-600 mr-3 text-4xl"></i>
+                    Gestión de Cursos
+                </h1>
+                <p class="text-gray-500 dark:text-gray-400 mt-1">Ciclos formativos disponibles para prácticas</p>
+            </div>
+            <div>
+                <a th:href="@{/admin/cursos/nuevo}"
+                   class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">
+                    <i class="bi bi-plus-circle mr-2"></i> Nuevo Curso
+                </a>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 shadow-xl rounded-xl p-6 mb-8">
+            <form th:action="@{/admin/cursos}" method="get" class="grid grid-cols-1 gap-4 md:grid-cols-12 md:gap-6">
+                <div class="md:col-span-4">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Nombre</label>
+                    <input type="text"
+                           class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
+                           name="nombre"
+                           placeholder="Buscar por nombre..."
+                           th:value="${param.nombre}">
+                </div>
+                <div class="md:col-span-3">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Tutor Asignado</label>
+                    <select name="tutorCursoId"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
+                        <option value="">-- Todos los Tutores --</option>
+                        </select>
+                </div>
+                <div class="md:col-span-3">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Estado</label>
+                    <select name="activo"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
+                        <option value="">-- Todos --</option>
+                        <option value="true" th:selected="${param.activo == 'true'}">Activo</option>
+                        <option value="false" th:selected="${param.activo == 'false'}">Inactivo</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2 flex items-end">
+                    <button type="submit"
+                            class="w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">
+                        <i class="bi bi-search mr-1"></i> Buscar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-5 border-l-4 border-indigo-500 transition duration-300 hover:shadow-xl">
+                <div class="text-center">
+                    <h6 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Cursos</h6>
+                    <h3 class="text-4xl font-extrabold text-gray-900 dark:text-white mt-1"
+                        th:text="${cursos?.size() ?: 0}">0</h3>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-5 border-l-4 border-green-500 transition duration-300 hover:shadow-xl">
+                <div class="text-center">
+                    <h6 class="text-sm font-medium text-gray-500 dark:text-gray-400">Activos</h6>
+                    <h3 class="text-4xl font-extrabold text-gray-900 dark:text-white mt-1"
+                        th:text="${cursos != null ? #lists.size(cursos.?[activo]) : 0}">0</h3>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-5 border-l-4 border-amber-500 transition duration-300 hover:shadow-xl">
+                <div class="text-center">
+                    <h6 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Alumnos</h6>
+                    <h3 class="text-4xl font-extrabold text-gray-900 dark:text-white mt-1">
+                        54 
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div th:if="${#lists.isEmpty(cursos)}" class="md:col-span-3 lg:col-span-3">
+                <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl text-center text-gray-500 dark:text-gray-400 py-12">
+                    <i class="bi bi-mortarboard text-6xl text-gray-300 dark:text-gray-600"></i>
+                    <p class="mt-4 text-lg">No hay cursos registrados o que cumplan los criterios de búsqueda.</p>
+                    <a th:href="@{/admin/cursos/nuevo}"
+                       class="inline-flex items-center mt-5 px-5 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">
+                        <i class="bi bi-plus-circle mr-2"></i> Crear Primer Curso
+                    </a>
+                </div>
+            </div>
+
+            <div th:each="curso : ${cursos}">
+                <div class="bg-white dark:bg-gray-800 shadow-xl rounded-xl h-full flex flex-col overflow-hidden transform hover:scale-[1.02] transition duration-300">
+                    <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex justify-between items-center">
+                        <h5 class="text-xl font-semibold text-gray-900 dark:text-white" th:text="${curso.nombre}">Curso FP Superior</h5>
+                        <span th:if="${curso.activo}"
+                              class="bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full dark:bg-green-900 dark:text-green-200">Activo</span>
+                        <span th:unless="${curso.activo}"
+                              class="bg-gray-100 text-gray-800 text-xs font-semibold px-3 py-1 rounded-full dark:bg-gray-700 dark:text-gray-300">Inactivo</span>
+                    </div>
+                    <div class="p-5 flex-grow">
+                        <div class="mb-3 text-sm flex items-center">
+                            <i class="bi bi-clock-fill text-indigo-500 mr-2"></i>
+                            <strong class="text-gray-800 dark:text-gray-100" th:text="${curso.duracion + ' horas'}">400 horas</strong>
+                        </div>
+
+                        <div class="mb-3" th:if="${curso.tutorCursoNombre}">
+                            <small class="text-gray-500 dark:text-gray-400 mr-2">Tutor:</small>
+                            <span class="text-sky-700 dark:text-sky-300 font-medium" th:text="${curso.tutorCursoNombre}">Juan García</span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <small class="text-gray-500 dark:text-gray-400 mr-2">Inicio:</small>
+                            <span class="text-gray-700 dark:text-gray-300" th:text="${#dates.format(curso.fechaInicio, 'dd/MM/yyyy')}">01/09/2024</span>
+                        </div>
+                        <div class="mb-3" th:if="${curso.fechaFin}">
+                            <small class="text-gray-500 dark:text-gray-400 mr-2">Fin:</small>
+                            <span class="text-gray-700 dark:text-gray-300" th:text="${#dates.format(curso.fechaFin, 'dd/MM/yyyy')}">30/06/2025</span>
+                        </div>
+
+                        <p class="text-gray-600 dark:text-gray-400 text-sm mt-4 italic" th:if="${curso.descripcion}" th:text="${#strings.abbreviate(curso.descripcion, 100)}">Descripción corta del curso...</p>
+                        
+                    </div>
+                    <div class="px-5 py-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-100 dark:border-gray-700 flex justify-end items-center mt-auto space-x-2">
+                        <a th:href="@{/admin/cursos/{id}/editar(id=${curso.id})}"
+                           class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 p-2 rounded-full hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition duration-150">
+                            <i class="bi bi-pencil text-lg"></i>
+                        </a>
+                        <button type="button"
+                                class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50 transition duration-150"
+                                th:onclick="'confirmarEliminarCurso(' + ${curso.id} + ', \'' + ${curso.nombre} + '\')'">
+                            <i class="bi bi-trash text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="modalEliminarCurso"
+             class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 hidden items-center justify-center transition-opacity duration-300"
+             aria-labelledby="modal-title-curso" role="dialog" aria-modal="true">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg mx-4">
+                <div class="bg-red-600 p-4 rounded-t-xl flex justify-between items-center">
+                    <h5 class="text-xl font-semibold text-white">
+                        <i class="bi bi-exclamation-triangle mr-2"></i> Confirmar Eliminación
+                    </h5>
+                    <button type="button" class="text-white hover:text-red-100" onclick="cerrarModalCurso()">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <p class="text-gray-700 dark:text-gray-300 mb-4">
+                        ¿Estás seguro de que deseas eliminar el curso <strong id="nombreCurso" class="font-bold text-gray-900 dark:text-white"></strong>?
+                    </p>
+                    <p class="text-red-600 dark:text-red-400 flex items-center text-sm bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
+                        <i class="bi bi-exclamation-triangle mr-2 text-lg"></i>
+                        Esta acción podría afectar a los alumnos asignados a este curso.
+                    </p>
+                </div>
+                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 rounded-b-xl flex justify-end space-x-3">
+                    <button type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 transition duration-150" onclick="cerrarModalCurso()">Cancelar</button>
+                    <form id="formEliminarCurso" method="post" style="display: inline;">
+                        <input type="hidden" name="_method" value="delete">
+                        <button type="submit"
+                                class="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg shadow-md hover:bg-red-700 transition duration-150">
+                            <i class="bi bi-trash mr-1"></i> Eliminar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block layout:fragment="extra-js">
+        <script>
+            function confirmarEliminarCurso(id, nombre) {
+                document.getElementById('nombreCurso').textContent = nombre;
+                document.getElementById('formEliminarCurso').action = '/admin/cursos/' + id;
+                document.getElementById('modalEliminarCurso').classList.remove('hidden');
+                document.getElementById('modalEliminarCurso').classList.add('flex');
+            }
+
+            function cerrarModalCurso() {
+                document.getElementById('modalEliminarCurso').classList.add('hidden');
+                document.getElementById('modalEliminarCurso').classList.remove('flex');
+            }
+        </script>
+    </th:block>
+</body>
+</html>

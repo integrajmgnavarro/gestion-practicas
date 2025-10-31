@@ -1,13 +1,10 @@
 package com.gestionpracticas.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class TutorCursoDTO {
     private Long id;
     private String nombre;
@@ -15,8 +12,8 @@ public class TutorCursoDTO {
     private String dni;
     private String email;
     private String telefono;
-    private String especialidad;
+    private String departamento;
     private Boolean activo;
     private LocalDateTime fechaCreacion;
-    private LocalDateTime fechaActualizacion;
+    private List<String> nombresCursos; // Lista de cursos que tutoriza
 }
