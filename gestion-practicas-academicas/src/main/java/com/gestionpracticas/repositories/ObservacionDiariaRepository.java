@@ -22,6 +22,12 @@ public interface ObservacionDiariaRepository extends JpaRepository<ObservacionDi
 
     List<ObservacionDiaria> findByAlumno_Id(Long alumnoId);
 
+    /**
+     * Recupera todas las observaciones diarias que corresponden a una lista de IDs de alumnos.
+     * Necesario para el filtro de Tutores.
+     */
+    List<ObservacionDiaria> findByAlumno_IdIn(List<Long> alumnoIds); // <-- ¡MÉTODO AÑADIDO!
+
     List<ObservacionDiaria> findByFecha(LocalDate fecha);
 
     List<ObservacionDiaria> findByFechaBetween(LocalDate inicio, LocalDate fin);
@@ -40,17 +46,17 @@ public interface ObservacionDiariaRepository extends JpaRepository<ObservacionDi
      * Recupera una observación junto con el alumno asociado (fetch join para evitar N+1).
      */
     @Query("SELECT od FROM ObservacionDiaria od " +
-           "LEFT JOIN FETCH od.alumno " +
-           "WHERE od.id = :id")
+            "LEFT JOIN FETCH od.alumno " +
+            "WHERE od.id = :id")
     Optional<ObservacionDiaria> findByIdWithAlumno(@Param("id") Long id);
 
     /**
      * Obtiene todas las observaciones de un alumno con la relación cargada.
      */
     @Query("SELECT od FROM ObservacionDiaria od " +
-           "LEFT JOIN FETCH od.alumno " +
-           "WHERE od.alumno.id = :alumnoId " +
-           "ORDER BY od.fecha DESC")
+            "LEFT JOIN FETCH od.alumno " +
+            "WHERE od.alumno.id = :alumnoId " +
+            "ORDER BY od.fecha DESC")
     List<ObservacionDiaria> findByAlumno_IdWithAlumno(@Param("alumnoId") Long alumnoId);
 
     // =============================

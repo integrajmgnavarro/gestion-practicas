@@ -206,7 +206,36 @@ public class EvaluacionService {
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
+    
+    /**
+     * Implementación necesaria para el controlador AlumnoWebController.
+     * Alias del método calcularNotaFinalAlumno.
+     * @param alumnoId ID del alumno.
+     * @return La nota final ponderada.
+     */
+    @Transactional(readOnly = true)
+    public Double calcularNotaMedia(Long alumnoId) {
+        // El controlador espera un Double, convertimos el BigDecimal a Double.
+        return calcularNotaFinalAlumno(alumnoId).doubleValue();
+    }
+    
+    /**
+     * Cuenta el número total de evaluaciones registradas para un alumno.
+     * Este método reemplaza a alumnoService.contarEvaluaciones(alumnoId).
+     * @param alumnoId ID del alumno.
+     * @return Número total de evaluaciones.
+     */
+    @Transactional(readOnly = true)
+    public Long contarEvaluaciones(Long alumnoId) {
+        return evaluacionRepository.countByAlumnoId(alumnoId);
+    }
 
+    /**
+     * Calcula la nota final del alumno ponderada por los criterios de evaluación.
+     * Este método reemplaza a alumnoService.calcularNotaMedia(alumnoId).
+     * @param alumnoId ID del alumno.
+     * @return La nota final ponderada.
+     */
     @Transactional(readOnly = true)
     public BigDecimal calcularNotaFinalAlumno(Long alumnoId) {
         List<Evaluacion> evaluaciones = evaluacionRepository.findByAlumno_Id(alumnoId);
@@ -222,11 +251,13 @@ public class EvaluacionService {
         for (Evaluacion eval : evaluaciones) {
             CriterioEvaluacion criterio = eval.getCapacidad().getCriterio();
             BigDecimal peso = criterio.getPeso();
+            // Normalizar a base 10 (ej: 8/10 -> 8.0)
             BigDecimal puntuacionNormalizada = eval.getPuntuacion()
-            		.divide(BigDecimal.valueOf(eval.getCapacidad().getPuntuacionMaxima()), 2, RoundingMode.HALF_UP)
+            		.divide(BigDecimal.valueOf(eval.getCapacidad().getPuntuacionMaxima()), 4, RoundingMode.HALF_UP)
                     .multiply(BigDecimal.TEN);
             
-            notaTotal = notaTotal.add(puntuacionNormalizada.multiply(peso).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
+            // notaTotal += (puntuacionNormalizada * peso) / 100
+            notaTotal = notaTotal.add(puntuacionNormalizada.multiply(peso).divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP));
             pesoTotal = pesoTotal.add(peso);
         }
 
@@ -234,7 +265,7 @@ public class EvaluacionService {
             return BigDecimal.ZERO;
         }
 
-        return notaTotal;
+        return notaTotal.setScale(2, RoundingMode.HALF_UP);
     }
 
     @Transactional

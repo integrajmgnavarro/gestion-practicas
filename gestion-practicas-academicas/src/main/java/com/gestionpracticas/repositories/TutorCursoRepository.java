@@ -2,6 +2,7 @@ package com.gestionpracticas.repositories;
 
 import com.gestionpracticas.models.TutorCurso;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor; // IMPORTACIÓN CLAVE
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -10,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface TutorCursoRepository extends JpaRepository<TutorCurso, Long> {
+public interface TutorCursoRepository extends JpaRepository<TutorCurso, Long>, JpaSpecificationExecutor<TutorCurso> { // EXTENSIÓN CLAVE
 
     Optional<TutorCurso> findByDni(String dni);
     Optional<TutorCurso> findByEmail(String email);

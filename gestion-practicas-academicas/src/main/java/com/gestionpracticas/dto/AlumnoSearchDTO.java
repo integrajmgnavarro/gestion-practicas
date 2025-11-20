@@ -15,4 +15,5 @@ public class AlumnoSearchDTO {
     private Long empresaId;
     private Long tutorPracticasId;
     private Boolean activo;
+    private String searchTerm;
 }

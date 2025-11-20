@@ -11,6 +11,9 @@ public class ReporteEjecutivoDTO {
     private Integer totalEmpresas;
     private Integer totalTutoresPracticas;
     
+    // *** CAMBIO CLAVE: Se añade la propiedad faltante 'totalTutoresCurso' ***
+    private Integer totalTutoresCurso; 
+    
     // Evaluaciones
     private Integer totalEvaluaciones;
     private BigDecimal notaMediaGlobal;

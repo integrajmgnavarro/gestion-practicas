@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{common/layout}"> 
+<head>
+    <title>Gestión de Tutores de Prácticas</title>
+	
+	<script src="https://cdn.tailwindcss.com"></script>
+	    
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+	    
+	<th:block layout:fragment="extra-css">
+</head>
+<body>
+    <div layout:fragment="content" class="p-4 md:p-8">
+        
+        <!-- Header Principal y Botones de Acción -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-xl shadow-xl mb-6 border-t-4 border-purple-600">
+            <div>
+                <h1 class="text-3xl font-extrabold text-gray-900 mb-1">
+                    <i class="bi bi-person-badge-fill text-purple-600 mr-2"></i>
+                    Gestión de Tutores de Prácticas
+                </h1>
+                <p class="text-gray-500 text-sm">Listado completo de tutores de prácticas del sistema</p>
+            </div>
+			<div class="mt-4 sm:mt-0 flex space-x-2"> 
+			    
+			    <!-- Botón Nuevo Tutor -->
+			    <!-- RUTA CORREGIDA a PLURAL -->
+			    <a th:href="@{/admin/tutores-practicas/nuevo}" 
+			       class="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-purple-600 hover:bg-purple-700 transition duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+			        <i class="bi bi-plus-circle mr-2"></i> Nuevo Tutor
+			    </a>
+			    
+			    <!-- Botón de Dashboard -->
+			    <a href="/admin/dashboard" 
+			       class="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-indigo-500 hover:bg-indigo-600 transition duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400"
+                   title="Volver al Panel Principal">
+			        <i class="bi bi-house-door-fill mr-2"></i> Dashboard Principal 
+			    </a>
+			</div>
+		</div>
+        
+        <!-- Formulario de Búsqueda y Filtros -->
+        <div class="bg-white shadow-xl rounded-xl p-6 mb-6">
+            <!-- RUTA CORREGIDA a PLURAL -->
+            <form th:action="@{/admin/tutores-practicas}" method="get" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Nombre</label>
+                    <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm" 
+                           name="nombre" th:value="${param.nombre}" placeholder="Buscar por nombre...">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Apellidos</label>
+                    <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm" 
+                           name="apellidos" th:value="${param.apellidos}" placeholder="Buscar por apellidos...">
+                </div>
+				
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">DNI</label>
+                    <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm" 
+                           name="dni" th:value="${param.dni}" placeholder="DNI...">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Estado</label>
+                    <select class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 sm:text-sm" 
+                            name="activo">
+                        <option value="" th:selected="${param.activo == null or param.activo.isEmpty()}">Todos</option>
+                        <option value="true" th:selected="${param.activo == 'true'}">Activos</option>
+                        <option value="false" th:selected="${param.activo == 'false'}">Inactivos</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <button type="submit" class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                        <i class="bi bi-search mr-2"></i> Buscar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tarjetas de Estadísticas -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            
+            <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-purple-500 hover:shadow-lg transition duration-200">
+                <h6 class="text-sm font-medium text-gray-500">Total Tutores</h6>
+                <h3 class="text-3xl font-extrabold text-gray-900" 
+                    th:text="${tutoresPage?.totalElements ?: 0}">0</h3>
+            </div>
+            
+            <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-green-500 hover:shadow-lg transition duration-200">
+                <h6 class="text-sm font-medium text-gray-500">Activos</h6>
+                <h3 class="text-3xl font-extrabold text-gray-900" 
+                    th:with="tutorList=${tutoresPage?.content}"
+                    th:text="${tutorList != null ? tutorList.?[activo].size() : 0}">0</h3>
+            </div>
+            
+            <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-500 hover:shadow-lg transition duration-200">
+                <h6 class="text-sm font-medium text-gray-500">Con Alumnos Asignados</h6>
+                <h3 class="text-3xl font-extrabold text-gray-900" 
+				    th:with="tutorList=${tutoresPage?.content}"
+				    th:text="${tutorList != null ? tutorList.?[alumnosAsignados > 0].size() : 0}">0</h3>
+            </div>
+            
+            <div class="bg-white p-5 rounded-xl shadow-md border-l-4 border-red-500 hover:shadow-lg transition duration-200">
+                <h6 class="text-sm font-medium text-gray-500">Sin Alumnos Asignados</h6>
+                <h3 class="text-3xl font-extrabold text-gray-900" 
+                    th:with="tutorList=${tutoresPage?.content}"
+                    th:text="${tutorList != null ? tutorList.?[alumnosAsignados == 0].size() : 0}">0</h3>
+            </div>
+        </div>
+
+        <!-- Tabla de Listado de Tutores -->
+        <div class="bg-white shadow-xl rounded-xl">
+            <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                <h2 class="text-lg font-bold text-gray-700">
+                    <i class="bi bi-table mr-2 text-gray-600"></i> Lista de Tutores
+                </h2>
+                <div>
+                    <button class="px-3 py-1 text-sm font-medium text-green-700 bg-green-100 border border-green-300 rounded-md hover:bg-green-200 transition duration-150" 
+                            onclick="exportarExcel()">
+                        <i class="bi bi-file-earmark-excel mr-1"></i> Exportar
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-6">
+                
+                <!-- Validación de lista vacía o nula. -->
+                <div th:if="${tutoresPage == null or #lists.isEmpty(tutoresPage.content)}" class="text-center text-gray-500 py-10">
+                    <i class="bi bi-inbox text-6xl text-gray-300"></i>
+                    <p class="mt-3 mb-0 text-lg font-semibold">No hay tutores registrados (o la variable 'tutoresPage' no está en el Modelo).</p>
+                    <!-- RUTA CORREGIDA a PLURAL -->
+                    <a th:href="@{/admin/tutores-practicas/nuevo}" class="mt-4 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700">
+                        <i class="bi bi-plus-circle mr-2"></i> Crear Primer Tutor
+                    </a>
+                </div>
+
+                <div class="overflow-x-auto" th:if="${tutoresPage != null and !#lists.isEmpty(tutoresPage.content)}">
+                	<table class="w-full min-w-max divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DNI</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre Completo</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Alumnos Asignados</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr th:each="tutor : ${tutoresPage.content}" class="hover:bg-gray-50 transition duration-150">
+                                
+                                <!-- Columna DNI -->
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    <span class="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800" 
+                                          th:text="${tutor.dni ?: '- Sin DNI -'}">DNI</span>
+                                </td>
+                                
+                                <!-- Columna Nombre Completo -->
+                                <td class="px-6 py-4"> 
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10 bg-purple-500 text-white rounded-full flex items-center justify-center text-base font-semibold">
+                                            <!-- Intentamos usar la primera letra, si el nombre es null, usamos 'T' -->
+                                            <span th:text="${tutor.nombre != null and #strings.length(tutor.nombre) > 0 ? #strings.substring(tutor.nombre, 0, 1) : 'T'}">T</span>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-semibold text-gray-900" 
+                                                 th:text="${(tutor.nombre ?: '') + ' ' + (tutor.apellidos ?: '-')}">Nombre Apellido</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <!-- Columna Email -->
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" 
+                                    th:text="${tutor.email ?: '-'}">email@example.com</td>
+                                    
+                                <!-- Columna Alumnos Asignados -->
+                                <td class="px-6 py-4 whitespace-nowrap text-center text-lg font-bold text-gray-900">
+                                    <span th:text="${tutor.alumnosAsignados ?: 0}">0</span>
+                                </td>
+                                
+                                <!-- Columna Estado -->
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span th:if="${tutor.activo}" 
+                                          class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        Activo
+                                    </span>
+                                    <span th:unless="${tutor.activo}" 
+                                          class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                        Inactivo
+                                    </span>
+                                </td>
+                                
+                                <!-- Columna Acciones -->
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <!-- Editar - RUTA CORREGIDA a PLURAL -->
+                                    <a th:href="@{/admin/tutores-practicas/{id}/editar(id=${tutor.id})}" 
+                                       class="text-purple-600 hover:text-purple-900 transition duration-150 mr-3" 
+                                       title="Ver/Editar">
+                                        <i class="bi bi-pencil-square text-lg"></i>
+                                    </a>
+									<form th:action="@{/admin/tutores-practicas/{id}/eliminar(id=${tutor.id})}" method="post" 
+									      class="inline-block" 
+									      onsubmit="return confirm('¿Estás seguro de que quieres eliminar a este tutor?');">
+									    <button type="submit" 
+									            class="text-red-600 hover:text-red-900 transition duration-150" 
+									            title="Eliminar">
+									        <i class="bi bi-trash-fill text-lg"></i>
+									    </button>
+									</form>                              
+								</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Paginación -->
+            <div th:if="${tutoresPage != null and tutoresPage.totalPages > 0}" 
+                 class="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 pt-4 border-t border-gray-200 p-6">
+                
+                <div class="text-sm text-gray-700">
+                    Mostrando 
+                    <span class="font-semibold" th:text="${tutoresPage.number * tutoresPage.size + 1}">1</span>
+                    a
+                    <span class="font-semibold" th:text="${tutoresPage.number * tutoresPage.size + tutoresPage.numberOfElements}">10</span>
+                    de
+                    <span class="font-semibold" th:text="${tutoresPage.totalElements}">100</span>
+                    resultados
+                </div>
+
+                <nav class="flex items-center space-x-1" aria-label="Pagination">
+                    
+                    <!-- Botón Anterior - RUTA CORREGIDA a PLURAL -->
+                    <a th:href="@{/admin/tutores-practicas(page=${tutoresPage.number - 1}, size=${tutoresPage.size}, nombre=${param.nombre}, apellidos=${param.apellidos}, dni=${param.dni}, activo=${param.activo})}"
+                       th:classappend="${tutoresPage.first} ? 'pointer-events-none opacity-50' : ''"
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50">
+                        <i class="bi bi-arrow-left mr-2"></i>
+                        Anterior
+                    </a>
+
+                    <!-- Números de Página - RUTA CORREGIDA a PLURAL -->
+                    <div th:with="currentPage=${tutoresPage.number}, totalPages=${tutoresPage.totalPages}">
+                        <span th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                            <a th:if="${i >= currentPage - 2 and i <= currentPage + 2}"
+                               th:href="@{/admin/tutores-practicas(page=${i}, size=${tutoresPage.size}, nombre=${param.nombre}, apellidos=${param.apellidos}, dni=${param.dni}, activo=${param.activo})}"
+                               th:classappend="${i == currentPage} ? 'bg-purple-600 text-white hover:bg-purple-700 border-purple-600' : 'text-gray-700 bg-white hover:bg-gray-50 border-gray-300'"
+                               class="hidden md:inline-flex items-center px-4 py-2 border text-sm font-medium rounded-lg">
+                                <span th:text="${i + 1}">1</span>
+                            </a>
+                            <span th:if="${i == currentPage - 3 and currentPage > 3}" class="hidden md:inline-flex items-center px-4 py-2 text-sm text-gray-700">...</span>
+                            <span th:if="${i == currentPage + 3 and currentPage < totalPages - 4}" class="hidden md:inline-flex items-center px-4 py-2 text-sm text-gray-700">...</span>
+                        </span>
+                    </div>
+                    
+                    <!-- Botón Siguiente - RUTA CORREGIDA a PLURAL -->
+                    <a th:href="@{/admin/tutores-practicas(page=${tutoresPage.number + 1}, size=${tutoresPage.size}, nombre=${param.nombre}, apellidos=${param.apellidos}, dni=${param.dni}, activo=${param.activo})}"
+                       th:classappend="${tutoresPage.last} ? 'pointer-events-none opacity-50' : ''"
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50">
+                        Siguiente
+                        <i class="bi bi-arrow-right ml-2"></i>
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

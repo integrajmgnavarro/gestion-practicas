@@ -12,8 +12,12 @@ public class TutorCursoDTO {
     private String dni;
     private String email;
     private String telefono;
-    private String departamento;
+    private String especialidad;
     private Boolean activo;
     private LocalDateTime fechaCreacion;
     private List<String> nombresCursos; // Lista de cursos que tutoriza
+
+    // Campo AÑADIDO para resolver el error EL1008E en Thymeleaf
+    // Deberá ser llenado por el Servicio antes de devolver el DTO.
+    private Integer modulosAsignados; 
 }

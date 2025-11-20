@@ -48,9 +48,9 @@ public class TutorCurso {
     @Column(length = 15)
     private String telefono;
 
-    @Size(max = 100, message = "El departamento es obligatorio")
-    @Column(nullable = false, length = 100)
-    private String departamento; // Departamento o área dentro del centro educativo
+    @Size(max = 100, message = "La especialidad no puede exceder 100 caracteres")
+    @Column(name = "especialidad", length = 100) // Cambiado a 'especialidad', 'nullable' por defecto a true (opcional)
+    private String especialidad;
 
     // Metadatos
     @Column(nullable = false)

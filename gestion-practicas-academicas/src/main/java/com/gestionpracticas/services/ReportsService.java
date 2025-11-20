@@ -14,6 +14,12 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Servicio de Spring Boot encargado de generar todos los informes
+ * y métricas de la plataforma de gestión de prácticas.
+ * Incluye lógica para reportes por Curso, Empresa, Tutor de Prácticas y Alumno,
+ * además de un Reporte Ejecutivo.
+ */
 @Service
 @RequiredArgsConstructor
 public class ReportsService {
@@ -119,7 +125,7 @@ public class ReportsService {
         
         // Incidencias del curso
         int totalIncidencias = 0;
-        int incidenciasAbiertas = 0;
+        long incidenciasAbiertas = 0;
         
         for (Alumno alumno : alumnos) {
             List<Incidencia> incidencias = incidenciaRepository.findByAlumno_Id(alumno.getId());
@@ -217,7 +223,7 @@ public class ReportsService {
         
         // Incidencias
         int totalIncidencias = 0;
-        int incidenciasResueltas = 0;
+        long incidenciasResueltas = 0;
         
         for (Alumno alumno : alumnos) {
             List<Incidencia> incidencias = incidenciaRepository.findByAlumno_Id(alumno.getId());
@@ -516,6 +522,12 @@ public class ReportsService {
 
     // ========================= MÉTODOS AUXILIARES ========================= //
 
+    /**
+     * Calcula la nota final de un alumno basándose en todas sus evaluaciones
+     * y los pesos de los criterios de evaluación.
+     * @param alumnoId El ID del alumno.
+     * @return La nota final ponderada.
+     */
     private BigDecimal calcularNotaFinalAlumno(Long alumnoId) {
         List<Evaluacion> evaluaciones = evaluacionRepository.findByAlumno_Id(alumnoId);
         
@@ -527,23 +539,39 @@ public class ReportsService {
         BigDecimal pesoTotal = BigDecimal.ZERO;
 
         for (Evaluacion eval : evaluaciones) {
+            // Se asume que getCapacidad() y getCriterio() nunca son null aquí para simplificar
+            // el ejemplo, pero en producción deberíamos añadir comprobaciones.
             CriterioEvaluacion criterio = eval.getCapacidad().getCriterio();
             BigDecimal peso = criterio.getPeso();
+            
+            // Normaliza la puntuación obtenida a una base 10 (asumiendo que PuntuacionMaxima es la base)
             BigDecimal puntuacionNormalizada = eval.getPuntuacion()
-                    .divide(BigDecimal.valueOf(eval.getCapacidad().getPuntuacionMaxima()), 2, RoundingMode.HALF_UP)
+                    .divide(BigDecimal.valueOf(eval.getCapacidad().getPuntuacionMaxima()), 4, RoundingMode.HALF_UP)
                     .multiply(BigDecimal.TEN);
             
-            notaTotal = notaTotal.add(puntuacionNormalizada.multiply(peso).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
+            // Calcula la contribución de esta evaluación a la nota final ponderada
+            BigDecimal contribucion = puntuacionNormalizada
+                    .multiply(peso)
+                    .divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
+                    
+            notaTotal = notaTotal.add(contribucion);
             pesoTotal = pesoTotal.add(peso);
         }
 
         if (pesoTotal.compareTo(BigDecimal.ZERO) == 0) {
             return BigDecimal.ZERO;
         }
-
-        return notaTotal;
+        
+        // En este modelo, la notaTotal ya es la nota final ponderada.
+        // Se escala a 2 decimales para la presentación.
+        return notaTotal.setScale(2, RoundingMode.HALF_UP);
     }
 
+    /**
+     * Convierte la nota numérica en una calificación textual (Sobresaliente, Notable, etc.).
+     * @param nota La nota numérica.
+     * @return La calificación textual.
+     */
     private String obtenerCalificacionTexto(BigDecimal nota) {
         if (nota.compareTo(BigDecimal.valueOf(9.0)) >= 0) {
             return "Sobresaliente";
@@ -558,6 +586,11 @@ public class ReportsService {
         }
     }
 
+    /**
+     * Convierte un objeto Evaluacion a su DTO de detalle para el reporte de alumno.
+     * @param evaluacion La entidad Evaluacion.
+     * @return El DTO de detalle.
+     */
     private EvaluacionDetalleDTO convertToDetalleDTO(Evaluacion evaluacion) {
         EvaluacionDetalleDTO dto = new EvaluacionDetalleDTO();
         

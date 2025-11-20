@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{common/layout}"> 
+<head>
+    <title layout:fragment="pageTitle">Editar Tutor de Curso</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <th:block layout:fragment="extra-css"></th:block>
+</head>
+<body>
+    <div layout:fragment="content" class="p-4 md:p-8 max-w-4xl mx-auto">
+        
+        <div class="bg-white p-6 rounded-xl shadow-xl mb-6 border-t-4 border-red-600">
+            <h1 class="text-3xl font-extrabold text-gray-900 mb-1">
+                <i class="bi bi-person-gear text-red-600 mr-2"></i>
+                Editar Tutor de Curso
+            </h1>
+            <p class="text-gray-500 text-sm">Modifica la información del tutor del centro y su estado de actividad.</p>
+        </div>
+
+        <div th:if="${message}" class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4" role="alert">
+            <p th:text="${message}"></p>
+        </div>
+        <div th:if="${error}" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+            <p th:text="${error}"></p>
+        </div>
+        <div th:if="${globalError}" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+            <p th:text="${globalError}"></p>
+        </div>
+
+        <div class="bg-white shadow-xl rounded-xl p-6">
+            <form th:action="@{/admin/tutores-curso/{id}/editar(id=${tutor.id})}" th:object="${tutor}" method="post" class="space-y-6">
+                
+                <input type="hidden" th:field="*{id}" /> 
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre (*)</label>
+                        <input type="text" th:field="*{nombre}" id="nombre" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                               th:classappend="${#fields.hasErrors('nombre')} ? 'border-red-500' : ''">
+                        <p th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}" class="mt-2 text-sm text-red-600"></p>
+                    </div>
+                    <div>
+                        <label for="apellidos" class="block text-sm font-medium text-gray-700">Apellidos (*)</label>
+                        <input type="text" th:field="*{apellidos}" id="apellidos" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                               th:classappend="${#fields.hasErrors('apellidos')} ? 'border-red-500' : ''">
+                        <p th:if="${#fields.hasErrors('apellidos')}" th:errors="*{apellidos}" class="mt-2 text-sm text-red-600"></p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="dni" class="block text-sm font-medium text-gray-700">DNI (*)</label>
+                        <input type="text" th:field="*{dni}" id="dni" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                               th:classappend="${#fields.hasErrors('dni')} ? 'border-red-500' : ''">
+                        <p th:if="${#fields.hasErrors('dni')}" th:errors="*{dni}" class="mt-2 text-sm text-red-600"></p>
+                    </div>
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700">Email (*)</label>
+                        <input type="email" th:field="*{email}" id="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                               th:classappend="${#fields.hasErrors('email')} ? 'border-red-500' : ''">
+                        <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="mt-2 text-sm text-red-600"></p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="telefono" class="block text-sm font-medium text-gray-700">Teléfono</label>
+                        <input type="text" th:field="*{telefono}" id="telefono" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                               th:classappend="${#fields.hasErrors('telefono')} ? 'border-red-500' : ''">
+                        <p th:if="${#fields.hasErrors('telefono')}" th:errors="*{telefono}" class="mt-2 text-sm text-red-600"></p>
+                    </div>
+                </div>
+				<div class="col-span-6 sm:col-span-3">
+					<label for="especialidad" class="block text-sm font-medium text-gray-700">
+					            Especialidad (Opcional)
+					        </label>
+					        <input type="text" id="especialidad" 
+					               th:field="*{especialidad}" 
+					               placeholder="Ej: Desarrollo Web (DAW)"
+					               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500" />
+					        <p th:if="${#fields.hasErrors('especialidad')}" th:errors="*{especialidad}" class="mt-2 text-sm text-red-600"></p>    
+				</div>
+                <div class="relative flex items-start pt-4 border-t border-gray-200">
+                    <div class="flex items-center h-5">
+                        <input id="activo" th:field="*{activo}" type="checkbox" class="focus:ring-red-500 h-4 w-4 text-red-600 border-gray-300 rounded">
+                    </div>
+                    <div class="ml-3 text-sm">
+                        <label for="activo" class="font-medium text-gray-700">Activo</label>
+                        <p class="text-gray-500">Marque para mantener el tutor activo en el centro.</p>
+                    </div>
+                </div>
+
+                <div class="pt-5 border-t border-gray-200 flex justify-end space-x-3">
+                    <a th:href="@{/admin/tutores-curso}" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition duration-150">
+                        <i class="bi bi-x-circle mr-2"></i> Cancelar
+                    </a>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150">
+                        <i class="bi bi-save mr-2"></i> Guardar Cambios
+                    </button>
+                </div>
+
+            </form>
+        </div>
+        
+    </div>
+</body>
+</html>

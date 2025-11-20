@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{common/layout}"> 
+<head>
+    <title layout:fragment="pageTitle">Nuevo Tutor de Prácticas</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <th:block layout:fragment="extra-css"></th:block>
+</head>
+<body>
+    <div layout:fragment="content" class="p-4 md:p-8 max-w-4xl mx-auto">
+        
+        <!-- Header Principal - Color morado/violeta -->
+        <div class="bg-white p-6 rounded-xl shadow-xl mb-6 border-t-4 border-violet-600">
+            <h1 class="text-3xl font-extrabold text-gray-900 mb-1">
+                <i class="bi bi-person-plus text-violet-600 mr-2"></i>
+                Nuevo Tutor de Prácticas
+            </h1>
+            <p class="text-gray-500 text-sm">Ingrese los datos del nuevo tutor de prácticas del centro.</p>
+        </div>
+
+        <!-- Formulario de Creación -->
+        <div class="bg-white shadow-xl rounded-lg overflow-hidden p-6">
+            <!-- 
+                ATENCIÓN: La declaración th:object es CRÍTICA. Debe usar el nombre 'tutorCreateDTO' 
+                que se añade al modelo en el controlador. El manejo de errores con #fields.hasErrors 
+                debe ocurrir DENTRO del alcance de esta etiqueta.
+            -->
+            <form th:action="@{/admin/tutores-practicas}" th:object="${tutorCreateDTO}" method="post" class="space-y-6">
+                
+                <!-- BLOQUE DE ERRORES GLOBALES (Línea crítica según el error) -->
+                <!-- Esta línea (donde estaba el error) está ahora protegida por th:object -->
+                <div th:if="${#fields.hasAnyErrors()}" class="p-4 rounded-md bg-red-50 border-l-4 border-red-400 mb-4">
+                    <div class="text-sm font-medium text-red-800">
+                        Por favor, corrija los siguientes errores:
+                    </div>
+                    <!-- Mensajes de errores globales (no asociados a un campo específico) -->
+                    <ul th:if="${#fields.hasErrors('global')}" class="mt-1 text-sm text-red-700 list-disc list-inside">
+                        <li th:each="err : ${#fields.errors('global')}" th:text="${err}"></li>
+                    </ul>
+                </div>
+
+                <!-- Campo Empresa (Relación) -->
+                <div>
+                    <label for="empresaId" class="block text-sm font-medium text-gray-700">Empresa Asignada <span class="text-red-500">*</span></label>
+                    <select th:field="*{empresaId}" id="empresaId" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500">
+                        <option value="">-- Seleccione una empresa --</option>
+                        <option th:each="empresa : ${empresas}" 
+                                th:value="${empresa.id}" 
+                                th:text="${empresa.nombre}"></option>
+                    </select>
+                    <p th:if="${#fields.hasErrors('empresaId')}" th:errors="*{empresaId}" class="text-xs text-red-500 mt-1"></p>
+                </div>
+
+                <!-- Nombre -->
+                <div>
+                    <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre <span class="text-red-500">*</span></label>
+                    <input th:field="*{nombre}" type="text" id="nombre" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500" />
+                    <p th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}" class="text-xs text-red-500 mt-1"></p>
+                </div>
+
+                <!-- Apellidos -->
+                <div>
+                    <label for="apellidos" class="block text-sm font-medium text-gray-700">Apellidos <span class="text-red-500">*</span></label>
+                    <input th:field="*{apellidos}" type="text" id="apellidos" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500" />
+                    <p th:if="${#fields.hasErrors('apellidos')}" th:errors="*{apellidos}" class="text-xs text-red-500 mt-1"></p>
+                </div>
+                
+                <!-- DNI -->
+                <div>
+                    <label for="dni" class="block text-sm font-medium text-gray-700">DNI <span class="text-red-500">*</span></label>
+                    <input th:field="*{dni}" type="text" id="dni" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500" />
+                    <!-- Se mostrarán errores de validación de formato y de duplicidad (si el DNI ya existe) -->
+                    <p th:if="${#fields.hasErrors('dni')}" th:errors="*{dni}" class="text-xs text-red-500 mt-1"></p>
+                </div>
+                
+                <!-- Email -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email <span class="text-red-500">*</span></label>
+                    <input th:field="*{email}" type="email" id="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500" />
+                    <!-- Se mostrarán errores de validación de formato y de duplicidad (si el email ya existe) -->
+                    <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-xs text-red-500 mt-1"></p>
+                </div>
+                
+                <!-- Teléfono -->
+                <div>
+                    <label for="telefono" class="block text-sm font-medium text-gray-700">Teléfono</label>
+                    <input th:field="*{telefono}" type="tel" id="telefono" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500" />
+                    <p th:if="${#fields.hasErrors('telefono')}" th:errors="*{telefono}" class="text-xs text-red-500 mt-1"></p>
+                </div>
+                
+                <!-- Cargo -->
+                <div>
+                    <label for="cargo" class="block text-sm font-medium text-gray-700">Cargo / Puesto</label>
+                    <input th:field="*{cargo}" type="text" id="cargo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500" />
+                    <p th:if="${#fields.hasErrors('cargo')}" th:errors="*{cargo}" class="text-xs text-red-500 mt-1"></p>
+                </div>
+
+                <!-- Horario de Contacto -->
+                <div>
+                    <label for="horario" class="block text-sm font-medium text-gray-700">Horario de Contacto</label>
+                    <textarea th:field="*{horario}" id="horario" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500"></textarea>
+                    <p th:if="${#fields.hasErrors('horario')}" th:errors="*{horario}" class="text-xs text-red-500 mt-1"></p>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="pt-5 border-t border-gray-200 flex justify-end space-x-3">
+                    <a th:href="@{/admin/tutores-practicas}" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition duration-150">
+                        <i class="bi bi-x-circle mr-2"></i> Cancelar
+                    </a>
+                    <!-- Botón de guardar en color violeta-600 -->
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-violet-600 hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500 transition duration-150">
+                        <i class="bi bi-check-circle-fill mr-2"></i> Crear Tutor
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</body>
+</html>

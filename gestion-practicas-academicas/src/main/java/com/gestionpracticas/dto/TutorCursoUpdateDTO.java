@@ -30,9 +30,8 @@ public class TutorCursoUpdateDTO {
     @Pattern(regexp = "^[0-9]{9,15}$", message = "El teléfono debe tener entre 9 y 15 dígitos")
     private String telefono;
 
-    @NotBlank(message = "El departamento es obligatorio")
-    @Size(max = 100, message = "El departamento no puede exceder 100 caracteres")
-    private String departamento;
+    @Size(max = 100, message = "La especialidad no puede exceder 100 caracteres")
+    private String especialidad;
 
     @NotNull(message = "El estado 'activo' es obligatorio")
     private Boolean activo;

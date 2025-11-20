@@ -58,6 +58,8 @@ public class AlumnoUpdateDTO {
     
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate fechaFin;
+    
+    private Boolean activo;
 
     private Boolean contratado = false;
 }

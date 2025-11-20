@@ -1,14 +1,20 @@
 package com.gestionpracticas.controllers;
 
 import com.gestionpracticas.dto.*;
-import com.gestionpracticas.services.*;
+import com.gestionpracticas.services.AlumnoService;
+import com.gestionpracticas.services.EstadisticasService;
+import com.gestionpracticas.services.EvaluacionService;
+import com.gestionpracticas.services.ReportsService;
+import com.gestionpracticas.services.TutorCursoService;
+import com.gestionpracticas.services.TutorPracticasService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
+import com.gestionpracticas.exception.ResourceNotFoundException;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +29,10 @@ import java.util.Map;
 public class ApiController {
 
     private final AlumnoService alumnoService;
-    private final TutorService tutorService;
+    // Servicios específicos de Tutores
+    private final TutorCursoService tutorCursoService;
+    private final TutorPracticasService tutorPracticasService;
+    // Otros servicios
     private final EvaluacionService evaluacionService;
     private final EstadisticasService estadisticasService;
     private final ReportsService reportsService;
@@ -53,8 +62,31 @@ public class ApiController {
     }
 
     /**
+     * GET /api/alumnos/tutor-practicas/{tutorPracticasId}
+     * Obtiene alumnos por Tutor de Prácticas
+     */
+    @GetMapping("/alumnos/tutor-practicas/{tutorPracticasId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TUTOR_CURSO', 'TUTOR_PRACTICAS')")
+    public ResponseEntity<List<AlumnoDTO>> getAlumnosByTutorPracticas(@PathVariable Long tutorPracticasId) {
+        List<AlumnoDTO> alumnos = alumnoService.getAlumnosByTutorPracticas(tutorPracticasId);
+        return ResponseEntity.ok(alumnos);
+    }
+    
+    /**
+     * GET /api/alumnos/tutor-curso/{tutorCursoId}
+     * Obtiene alumnos por Tutor de Curso
+     */
+    @GetMapping("/alumnos/tutor-curso/{tutorCursoId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TUTOR_CURSO')")
+    public ResponseEntity<List<AlumnoDTO>> getAlumnosByTutorCurso(@PathVariable Long tutorCursoId) {
+        List<AlumnoDTO> alumnos = alumnoService.getAlumnosByTutorCurso(tutorCursoId);
+        return ResponseEntity.ok(alumnos);
+    }
+
+
+    /**
      * GET /api/alumnos/buscar
-     * Búsqueda de alumnos con criterios
+     * Búsqueda de alumnos con criterios (llama al método adaptado en AlumnoService)
      */
     @GetMapping("/alumnos/buscar")
     @PreAuthorize("hasAnyRole('ADMIN', 'TUTOR_CURSO', 'TUTOR_PRACTICAS')")
@@ -77,19 +109,18 @@ public class ApiController {
     /**
      * PUT /api/alumnos/{id}
      * Actualiza un alumno
+     * CORRECCIÓN: Se inyecta el ID en el DTO y se llama al service con un solo argumento,
+     * ya que AlumnoService.updateAlumno() solo acepta el DTO.
      */
     @PutMapping("/alumnos/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'ALUMNO')")
     public ResponseEntity<AlumnoDTO> updateAlumno(@PathVariable Long id,
             @Valid @RequestBody AlumnoUpdateDTO updateDTO) {
-		
-			// 1. Asignar el ID de la ruta al DTO
-			updateDTO.setId(id); 
-			
-			// 2. Llamar al servicio con la nueva firma de un solo argumento
-			AlumnoDTO alumno = alumnoService.updateAlumno(updateDTO); 
-			
-			return ResponseEntity.ok(alumno);
+        // Se asume que AlumnoService.updateAlumno(DTO) espera que el ID esté en el DTO.
+        updateDTO.setId(id);
+        AlumnoDTO alumno = alumnoService.updateAlumno(updateDTO);
+
+        return ResponseEntity.ok(alumno);
     }
 
     /**
@@ -103,19 +134,84 @@ public class ApiController {
         return ResponseEntity.noContent().build();
     }
 
-    // ========================= TUTORES ========================= //
+    // ========================= TUTORES DE CURSO ========================= //
 
     /**
-     * GET /api/tutores-curso
+     * GET /api/tutor-curso
      * Lista todos los tutores de curso
      */
-    @GetMapping("/tutores-curso")
+    @GetMapping("/tutor-curso")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<TutorCursoDTO>> getAllTutoresCurso() {
-        List<TutorCursoDTO> tutores = tutorService.getAllTutoresCurso();
+        List<TutorCursoDTO> tutores = tutorCursoService.findAllList();
         return ResponseEntity.ok(tutores);
     }
 
+    /**
+     * GET /api/tutor-curso/{id}
+     * Obtiene un tutor de curso por ID
+     */
+    @GetMapping("/tutor-curso/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TUTOR_CURSO', 'TUTOR_PRACTICAS')")
+    public ResponseEntity<TutorCursoDTO> getTutorCursoById(@PathVariable Long id) {
+        TutorCursoDTO tutor = tutorCursoService.findById(id);
+        return ResponseEntity.ok(tutor);
+    }
+
+
+    /**
+     * POST /api/tutor-curso
+     * Crea un tutor de curso
+     */
+    @PostMapping("/tutor-curso")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<TutorCursoDTO> createTutorCurso(@Valid @RequestBody TutorCursoCreateDTO createDTO) {
+        TutorCursoDTO tutor = tutorCursoService.createTutorCurso(createDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(tutor);
+    }
+
+    /**
+     * PUT /api/tutor-curso/{id}
+     * Actualiza un tutor de curso
+     * NOTA: La firma de TutorCursoService.updateTutorCurso(Long, DTO) se mantiene con dos argumentos.
+     */
+    @PutMapping("/tutores-curso/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<TutorCursoDTO> updateTutorCurso(
+            @PathVariable Long id,
+            @Valid @RequestBody TutorCursoUpdateDTO updateDTO) {
+        
+        try {
+            // 1. Asignar el ID del PathVariable al DTO para que el Service lo use.
+            //    (Esto usa 'updateDTO', que es el nombre correcto del parámetro)
+            updateDTO.setId(id);
+            
+            // 2. CORRECCIÓN CLAVE: Llama al servicio SOLAMENTE con el DTO (updateDTO).
+            TutorCursoDTO tutor = tutorCursoService.updateTutorCurso(updateDTO);
+            
+            return ResponseEntity.ok(tutor);
+        } catch (ResourceNotFoundException e) {
+            // Manejo de recursos no encontrados
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            // Manejo de errores de unicidad/negocio (DuplicateResourceException, etc.)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+    
+    /**
+     * DELETE /api/tutor-curso/{id}
+     * Elimina un tutor de curso
+     */
+    @DeleteMapping("/tutor-curso/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteTutorCurso(@PathVariable Long id) {
+        tutorCursoService.deleteTutorCurso(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // ========================= TUTORES DE PRÁCTICAS ========================= //
+    
     /**
      * GET /api/tutores-practicas
      * Lista todos los tutores de prácticas
@@ -123,20 +219,21 @@ public class ApiController {
     @GetMapping("/tutores-practicas")
     @PreAuthorize("hasAnyRole('ADMIN', 'TUTOR_CURSO')")
     public ResponseEntity<List<TutorPracticasDTO>> getAllTutoresPracticas() {
-        List<TutorPracticasDTO> tutores = tutorService.getAllTutoresPracticas();
+        List<TutorPracticasDTO> tutores = tutorPracticasService.getAllTutoresPracticas();
         return ResponseEntity.ok(tutores);
     }
-
+    
     /**
-     * POST /api/tutores-curso
-     * Crea un tutor de curso
+     * GET /api/tutores-practicas/{id}
+     * Obtiene un tutor de prácticas por ID
      */
-    @PostMapping("/tutores-curso")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<TutorCursoDTO> createTutorCurso(@Valid @RequestBody TutorCursoCreateDTO createDTO) {
-        TutorCursoDTO tutor = tutorService.createTutorCurso(createDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(tutor);
+    @GetMapping("/tutores-practicas/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TUTOR_CURSO', 'TUTOR_PRACTICAS')")
+    public ResponseEntity<TutorPracticasDTO> getTutorPracticasById(@PathVariable Long id) {
+        TutorPracticasDTO tutor = tutorPracticasService.getTutorPracticasById(id);
+        return ResponseEntity.ok(tutor);
     }
+
 
     /**
      * POST /api/tutores-practicas
@@ -145,9 +242,36 @@ public class ApiController {
     @PostMapping("/tutores-practicas")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TutorPracticasDTO> createTutorPracticas(@Valid @RequestBody TutorPracticasCreateDTO createDTO) {
-        TutorPracticasDTO tutor = tutorService.createTutorPracticas(createDTO);
+        TutorPracticasDTO tutor = tutorPracticasService.createTutorPracticas(createDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(tutor);
     }
+    
+    /**
+     * PUT /api/tutores-practicas/{id}
+     * Actualiza un tutor de prácticas
+     * CORRECCIÓN: Se inyecta el ID en el DTO y se llama al service con un solo argumento.
+     */
+    @PutMapping("/tutores-practicas/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<TutorPracticasDTO> updateTutorPracticas(@PathVariable Long id,
+                                                                 @Valid @RequestBody TutorPracticasUpdateDTO updateDTO) {
+        // Se asume que TutorPracticasService.updateTutorPracticas(DTO) espera que el ID esté en el DTO.
+        updateDTO.setId(id);
+        TutorPracticasDTO tutor = tutorPracticasService.updateTutorPracticas(id, updateDTO);
+        return ResponseEntity.ok(tutor);
+    }
+
+    /**
+     * DELETE /api/tutores-practicas/{id}
+     * Elimina un tutor de prácticas
+     */
+    @DeleteMapping("/tutores-practicas/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteTutorPracticas(@PathVariable Long id) {
+        tutorPracticasService.deleteTutorPracticas(id);
+        return ResponseEntity.noContent().build();
+    }
+
 
     // ========================= EVALUACIONES ========================= //
 
@@ -191,7 +315,8 @@ public class ApiController {
     @PutMapping("/evaluaciones/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'TUTOR_PRACTICAS')")
     public ResponseEntity<EvaluacionDTO> updateEvaluacion(@PathVariable Long id,
-                                                          @Valid @RequestBody EvaluacionUpdateDTO updateDTO) {
+            @Valid @RequestBody EvaluacionUpdateDTO updateDTO) {
+        // Se asume que EvaluacionService.updateEvaluacion() acepta dos argumentos.
         EvaluacionDTO evaluacion = evaluacionService.updateEvaluacion(id, updateDTO);
         return ResponseEntity.ok(evaluacion);
     }
@@ -392,11 +517,11 @@ public class ApiController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Map<String, Object>> getDashboardData() {
         Map<String, Object> data = new HashMap<>();
-        
+
         // TODO: Personalizar según el rol del usuario autenticado
         data.put("totalAlumnos", alumnoService.getAllAlumnos().size());
         data.put("alumnosActivos", alumnoService.getAlumnosActivos().size());
-        
+
         return ResponseEntity.ok(data);
     }
 
@@ -408,67 +533,24 @@ public class ApiController {
     @PreAuthorize("hasAnyRole('ADMIN', 'TUTOR_CURSO', 'TUTOR_PRACTICAS')")
     public ResponseEntity<Map<String, Object>> calcularNotaFinal(@PathVariable Long alumnoId) {
         java.math.BigDecimal notaFinal = evaluacionService.calcularNotaFinalAlumno(alumnoId);
-        
+
         Map<String, Object> response = new HashMap<>();
         response.put("alumnoId", alumnoId);
         response.put("notaFinal", notaFinal);
-        
+
         // Determinar calificación textual
         String calificacion;
-        if (notaFinal.compareTo(java.math.BigDecimal.valueOf(9.0)) >= 0) {
+        if (notaFinal.compareTo(BigDecimal.valueOf(9.0)) >= 0) {
             calificacion = "Sobresaliente";
-        } else if (notaFinal.compareTo(java.math.BigDecimal.valueOf(7.0)) >= 0) {
+        } else if (notaFinal.compareTo(BigDecimal.valueOf(7.0)) >= 0) {
             calificacion = "Notable";
-        } else if (notaFinal.compareTo(java.math.BigDecimal.valueOf(6.0)) >= 0) {
-            calificacion = "Bien";
-        } else if (notaFinal.compareTo(java.math.BigDecimal.valueOf(5.0)) >= 0) {
-            calificacion = "Suficiente";
+        } else if (notaFinal.compareTo(BigDecimal.valueOf(5.0)) >= 0) {
+            calificacion = "Aprobado";
         } else {
-            calificacion = "Insuficiente";
+            calificacion = "Suspenso";
         }
-        
         response.put("calificacion", calificacion);
-        response.put("aprobado", notaFinal.compareTo(java.math.BigDecimal.valueOf(5.0)) >= 0);
         
         return ResponseEntity.ok(response);
-    }
-
-    /**
-     * POST /api/validar-dni
-     * Valida formato de DNI español
-     */
-    @PostMapping("/validar-dni")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Map<String, Object>> validarDni(@RequestBody Map<String, String> request) {
-        String dni = request.get("dni");
-        boolean valido = validarFormatoDni(dni);
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("dni", dni);
-        response.put("valido", valido);
-        
-        return ResponseEntity.ok(response);
-    }
-
-    // ========================= MÉTODOS AUXILIARES ========================= //
-
-    /**
-     * Valida formato básico de DNI español
-     */
-    private boolean validarFormatoDni(String dni) {
-        if (dni == null || dni.length() != 9) {
-            return false;
-        }
-        
-        String letras = "TRWAGMYFPDXBNJZSQVHLCKE";
-        String numero = dni.substring(0, 8);
-        char letra = dni.charAt(8);
-        
-        try {
-            int numDni = Integer.parseInt(numero);
-            return letras.charAt(numDni % 23) == Character.toUpperCase(letra);
-        } catch (NumberFormatException e) {
-            return false;
-        }
     }
 }

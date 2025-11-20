@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{common/layout}"> 
+<head>
+    <title layout:fragment="pageTitle">Gestión de Tutores de Curso</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+	<th:block layout:fragment="extra-css"></th:block>
+</head>
+<body>
+	<div layout:fragment="content" class="p-4 md:p-8">
+	        
+	    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-xl shadow-xl mb-6 border-t-4 border-red-600">
+	        <div class="flex items-center space-x-4">
+	            <div>
+	                <h1 class="text-3xl font-extrabold text-gray-900 mb-1">
+	                    <i class="bi bi-person-badge-fill text-red-600 mr-2"></i>
+	                    Gestión de Tutores de Curso
+	                </h1>
+	                <p class="text-gray-500 text-sm">Listado completo de tutores de curso del centro</p>
+	            </div>
+	        </div>
+	        
+	        <div class="mt-4 sm:mt-0 flex space-x-3">
+	            
+	            <a th:href="@{/admin}" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition duration-150">
+	                <i class="bi bi-house-door-fill mr-2"></i> Dashboard
+	            </a>
+
+	            <a th:href="@{/admin/tutores-curso/nuevo}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+	                <i class="bi bi-plus-lg mr-2"></i> Nuevo Tutor
+	            </a>
+	        </div>
+	        </div>
+
+        <div th:if="${success}" class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6" role="alert">
+            <p class="font-bold">Éxito</p>
+            <p th:text="${success}">Operación realizada con éxito.</p>
+        </div>
+        <div th:if="${error}" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6" role="alert">
+            <p class="font-bold">Error</p>
+            <p th:text="${error}">Ha ocurrido un error.</p>
+        </div>
+
+
+        <div class="bg-white p-6 rounded-xl shadow-xl mb-6">
+            <form th:action="@{/admin/tutores-curso}" method="get" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <input type="text" name="nombre" th:value="${nombre}" placeholder="Nombre" class="col-span-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm">
+                    <input type="text" name="apellidos" th:value="${apellidos}" placeholder="Apellidos" class="col-span-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm">
+                    <input type="text" name="dni" th:value="${dni}" placeholder="DNI" class="col-span-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm">
+                    <input type="text" name="especialidad" th:value="${especialidad}" placeholder="Especialidad" class="col-span-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm">
+                    <select name="activo" class="col-span-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm">
+                        <option value="">Estado (Todos)</option>
+                        <option value="true" th:selected="${activo != null and activo == true}">Activo</option>
+                        <option value="false" th:selected="${activo != null and activo == false}">Inactivo</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <a th:href="@{/admin/tutores-curso}" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition duration-150">
+                        <i class="bi bi-x-circle mr-2"></i> Limpiar Filtros
+                    </a>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                        <i class="bi bi-search mr-2"></i> Buscar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+
+        <div class="flex flex-col">
+            <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+                    <div class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Nombre / Email
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        DNI
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Cursos Asignados
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Especialidad
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Estado
+                                    </th>
+                                    <th scope="col" class="relative px-6 py-3">
+                                        <span class="sr-only">Acciones</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr th:each="tutor : ${tutoresPage.content}">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900" th:text="${tutor.nombre + ' ' + tutor.apellidos}">Nombre Apellidos</div>
+                                        <div class="text-sm text-gray-500" th:text="${tutor.email}">email@ejemplo.com</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" th:text="${tutor.dni}">DNI</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <span th:if="${tutor.nombresCursos != null and !tutor.nombresCursos.isEmpty()}" th:text="${#strings.listJoin(tutor.nombresCursos, ', ')}"></span>
+                                        <span th:unless="${tutor.nombresCursos != null and !tutor.nombresCursos.isEmpty()}" class="text-gray-400">Ninguno</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" th:text="${tutor.especialidad}">Especialidad</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span th:if="${tutor.activo}" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                            Activo
+                                        </span>
+                                        <span th:unless="${tutor.activo}" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                            Inactivo
+                                        </span>
+                                    </td>
+                                    
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <div class="flex justify-end space-x-2">
+                                            <a th:href="@{/admin/tutores-curso/{id}/editar(id=${tutor.id})}" 
+                                               class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-red-600 hover:bg-red-50 transition duration-150">
+                                                <i class="bi bi-pencil-square mr-1"></i> Editar
+                                            </a>
+
+                                            <button type="button" 
+                                                    th:data-tutor-id="${tutor.id}" 
+                                                    th:data-tutor-name="${tutor.nombre + ' ' + tutor.apellidos}" 
+                                                    onclick="confirmDelete(this)"
+                                                    class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition duration-150">
+                                                <i class="bi bi-trash mr-1"></i> Eliminar
+                                            </button>
+                                        </div>
+                                    </td>
+                                    </tr>
+                                <tr th:if="${tutoresPage.content.isEmpty()}">
+                                    <td colspan="6" class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+                                        No se encontraron tutores con los filtros aplicados.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${tutoresPage.totalPages > 1}" class="mt-4 flex justify-between items-center">
+            <span class="text-sm text-gray-700" th:text="'Página ' + ${tutoresPage.number + 1} + ' de ' + ${tutoresPage.totalPages} + ' (' + ${tutoresPage.totalElements} + ' resultados)'"></span>
+            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                <a th:if="${!tutoresPage.isFirst()}" th:href="@{/admin/tutores-curso(page=${tutoresPage.number - 1}, size=${tutoresPage.size}, nombre=${nombre}, apellidos=${apellidos}, dni=${dni}, especialidad=${especialidad}, activo=${activo})}"
+                   class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+
+                <div th:each="i : ${#numbers.sequence(0, tutoresPage.totalPages - 1)}">
+                    <a th:href="@{/admin/tutores-curso(page=${i}, size=${tutoresPage.size}, nombre=${nombre}, apellidos=${apellidos}, dni=${dni}, especialidad=${especialidad}, activo=${activo})}"
+                       th:classappend="${i == tutoresPage.number ? 'bg-red-600 text-white border-red-600' : 'bg-white text-gray-700 hover:bg-gray-50'}"
+                       class="relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                        <span th:text="${i + 1}"></span>
+                    </a>
+                </div>
+
+                <a th:if="${!tutoresPage.isLast()}" th:href="@{/admin/tutores-curso(page=${tutoresPage.number + 1}, size=${tutoresPage.size}, nombre=${nombre}, apellidos=${apellidos}, dni=${dni}, especialidad=${especialidad}, activo=${activo})}"
+                   class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </nav>
+        </div>
+        
+        <div id="deleteModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeModal()"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <i class="bi bi-exclamation-triangle-fill h-6 w-6 text-red-600" aria-hidden="true"></i>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                    Confirmar Eliminación
+                                </h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-gray-500">
+                                        ¿Está seguro de que desea eliminar al tutor de curso **<span id="tutorName" class="font-semibold text-gray-900"></span>**?
+                                        Esta acción no se puede deshacer.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <form id="deleteForm" method="post">
+                            <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
+                                Eliminar
+                            </button>
+                        </form>
+                        <button type="button" onclick="closeModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <script th:inline="javascript">
+            /* Función para mostrar el modal de confirmación - Ahora recibe el elemento del botón (this) */
+            function confirmDelete(buttonElement) {
+                // 1. Obtener los datos del atributo 'data-*' del botón
+                const id = buttonElement.getAttribute('data-tutor-id');
+                const name = buttonElement.getAttribute('data-tutor-name');
+
+                // 2. Insertar el nombre en el modal
+                document.getElementById('tutorName').textContent = name;
+                
+                // 3. Establecer la acción del formulario
+                document.getElementById('deleteForm').action = "/admin/tutores-curso/" + id + "/eliminar"; 
+                
+                // 4. Mostrar el modal
+                document.getElementById('deleteModal').classList.remove('hidden');
+            }
+
+            /* Función para ocultar el modal */
+            function closeModal() {
+                document.getElementById('deleteModal').classList.add('hidden');
+            }
+        </script>
+    </div>
+</body>
+</html>

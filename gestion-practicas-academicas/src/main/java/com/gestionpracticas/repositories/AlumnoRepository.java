@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -66,14 +68,27 @@ public interface AlumnoRepository extends JpaRepository<Alumno, Long> {
     @Query("SELECT COUNT(a) FROM Alumno a WHERE a.empresa.id = :empresaId AND a.activo = true")
     Long countAlumnosActivosByEmpresa(@Param("empresaId") Long empresaId);
 
-    // Búsqueda con múltiples criterios
+    // --- NUEVO MÉTODO AÑADIDO PARA LA BÚSQUEDA GENERAL ---
+    /**
+     * Busca alumnos por coincidencia en nombre, apellidos, DNI o email.
+     * Es la implementación que el AlumnoService necesita para searchAlumnos.
+     */
     @Query("SELECT a FROM Alumno a WHERE " +
-           "(:nombre IS NULL OR LOWER(a.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) AND " +
-           "(:apellidos IS NULL OR LOWER(a.apellidos) LIKE LOWER(CONCAT('%', :apellidos, '%'))) AND " +
-           "(:dni IS NULL OR a.dni = :dni) AND " +
-           "(:cursoId IS NULL OR a.curso.id = :cursoId) AND " +
-           "(:empresaId IS NULL OR a.empresa.id = :empresaId) AND " +
-           "(:activo IS NULL OR a.activo = :activo)")  
+            "LOWER(a.nombre) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+            "LOWER(a.apellidos) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+            "LOWER(a.dni) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+            "LOWER(a.email) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
+    List<Alumno> findBySearchTerm(@Param("searchTerm") String searchTerm);
+    // ----------------------------------------------------
+
+    // Búsqueda con múltiples criterios (sin paginación)
+    @Query("SELECT a FROM Alumno a WHERE " +
+            "(:nombre IS NULL OR LOWER(a.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) AND " +
+            "(:apellidos IS NULL OR LOWER(a.apellidos) LIKE LOWER(CONCAT('%', :apellidos, '%'))) AND " +
+            "(:dni IS NULL OR a.dni = :dni) AND " +
+            "(:cursoId IS NULL OR a.curso.id = :cursoId) AND " +
+            "(:empresaId IS NULL OR a.empresa.id = :empresaId) AND " +
+            "(:activo IS NULL OR a.activo = :activo)")
     List<Alumno> findByMultipleCriteria(
             @Param("nombre") String nombre,
             @Param("apellidos") String apellidos,
@@ -82,4 +97,21 @@ public interface AlumnoRepository extends JpaRepository<Alumno, Long> {
             @Param("empresaId") Long empresaId,
             @Param("activo") Boolean activo
     );
+
+    // Búsqueda con múltiples criterios y PAGINACIÓN (CORRECCIÓN: DNI usa coincidencia exacta)
+    @Query("SELECT a FROM Alumno a " +
+            "WHERE (:nombre IS NULL OR lower(a.nombre) LIKE lower(concat('%', :nombre, '%'))) " +
+            "AND (:apellidos IS NULL OR lower(a.apellidos) LIKE lower(concat('%', :apellidos, '%'))) " +
+            "AND (:dni IS NULL OR a.dni = :dni) " + // <-- FIX IMPORTANTE: DNI usa coincidencia exacta
+            "AND (:cursoId IS NULL OR a.curso.id = :cursoId) " +
+            "AND (:empresaId IS NULL OR a.empresa.id = :empresaId) " +
+            "AND (:activo IS NULL OR a.activo = :activo)")
+      Page<Alumno> findByMultipleCriteriaWithPagination( // <-- Nombre usado en AlumnoService
+            @Param("nombre") String nombre,
+            @Param("apellidos") String apellidos,
+            @Param("dni") String dni,
+            @Param("cursoId") Long cursoId,
+            @Param("empresaId") Long empresaId,
+            @Param("activo") Boolean activo,
+            Pageable pageable);
 }

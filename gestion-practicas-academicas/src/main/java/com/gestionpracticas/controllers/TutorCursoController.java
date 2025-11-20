@@ -24,12 +24,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TutorCursoController {
 
-    private final TutorService tutorService;
+    private final TutorCursoService tutorService;
     private final AlumnoService alumnoService;
     private final EvaluacionService evaluacionService;
     private final EstadisticasService estadisticasService;
     private final ReportsService reportsService;
     private final UsuarioRepository usuarioRepository;
+    private final EmpresaService empresaService; // Servicio de Empresa añadido
+    private final TutorPracticasService tutorPracticasService; // Servicio de TutorPrácticas añadido
 
     // ========================= DASHBOARD ========================= //
 
@@ -42,7 +44,7 @@ public class TutorCursoController {
         Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        TutorCursoDTO tutor = tutorService.getTutorCursoById(usuario.getReferenceId());
+        TutorCursoDTO tutor = tutorService.findById(usuario.getReferenceId());
         List<AlumnoDTO> alumnos = alumnoService.getAlumnosByTutorCurso(tutor.getId());
 
         model.addAttribute("tutor", tutor);
@@ -64,7 +66,7 @@ public class TutorCursoController {
         Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        TutorCursoDTO tutor = tutorService.getTutorCursoById(usuario.getReferenceId());
+        TutorCursoDTO tutor = tutorService.findById(usuario.getReferenceId());
         List<AlumnoDTO> alumnos = alumnoService.getAlumnosByTutorCurso(tutor.getId());
 
         model.addAttribute("tutor", tutor);
@@ -79,12 +81,12 @@ public class TutorCursoController {
      */
     @GetMapping("/alumnos/{id}")
     public String alumnoDetalle(@PathVariable Long id,
-                                @AuthenticationPrincipal UserDetails userDetails,
-                                Model model) {
+                                 @AuthenticationPrincipal UserDetails userDetails,
+                                 Model model) {
         Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        TutorCursoDTO tutor = tutorService.getTutorCursoById(usuario.getReferenceId());
+        TutorCursoDTO tutor = tutorService.findById(usuario.getReferenceId());
         AlumnoDTO alumno = alumnoService.getAlumnoById(id);
 
         // Verificar que el alumno pertenece a un curso de este tutor
@@ -117,19 +119,23 @@ public class TutorCursoController {
         Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        TutorCursoDTO tutor = tutorService.getTutorCursoById(usuario.getReferenceId());
+        TutorCursoDTO tutor = tutorService.findById(usuario.getReferenceId());
         List<AlumnoDTO> alumnos = alumnoService.getAlumnosByTutorCurso(tutor.getId());
 
-        // Obtener empresas únicas de los alumnos
+        // Obtener IDs de empresas únicas de los alumnos
         List<Long> empresaIds = alumnos.stream()
                 .filter(a -> a.getEmpresaId() != null)
                 .map(AlumnoDTO::getEmpresaId)
                 .distinct()
                 .toList();
 
+        // Cargar datos completos de empresas (Resuelve el TODO)
+        List<EmpresaDTO> empresas = empresaIds.stream()
+                .map(empresaService::getEmpresaById)
+                .toList();
+
         model.addAttribute("tutor", tutor);
-        model.addAttribute("empresaIds", empresaIds);
-        // TODO: Cargar datos completos de empresas si es necesario
+        model.addAttribute("empresas", empresas); // Ahora se añade la lista de DTOs completa
 
         return "tutor-curso/empresas";
     }
@@ -143,18 +149,23 @@ public class TutorCursoController {
         Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        TutorCursoDTO tutor = tutorService.getTutorCursoById(usuario.getReferenceId());
+        TutorCursoDTO tutor = tutorService.findById(usuario.getReferenceId());
         List<AlumnoDTO> alumnos = alumnoService.getAlumnosByTutorCurso(tutor.getId());
 
-        // Obtener tutores de prácticas únicos
+        // Obtener IDs de tutores de prácticas únicos
         List<Long> tutorPracticasIds = alumnos.stream()
                 .filter(a -> a.getTutorPracticasId() != null)
                 .map(AlumnoDTO::getTutorPracticasId)
                 .distinct()
                 .toList();
 
+        // Cargar datos completos de tutores de prácticas (Resuelve el TODO)
+        List<TutorPracticasDTO> tutoresPracticas = tutorPracticasIds.stream()
+                .map(tutorPracticasService::getTutorPracticasById)
+                .toList();
+
         model.addAttribute("tutor", tutor);
-        model.addAttribute("tutorPracticasIds", tutorPracticasIds);
+        model.addAttribute("tutoresPracticas", tutoresPracticas); // Ahora se añade la lista de DTOs completa
 
         return "tutor-curso/tutores-practicas";
     }
@@ -170,7 +181,7 @@ public class TutorCursoController {
         Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        TutorCursoDTO tutor = tutorService.getTutorCursoById(usuario.getReferenceId());
+        TutorCursoDTO tutor = tutorService.findById(usuario.getReferenceId());
         List<EvaluacionTutorDTO> evaluaciones = evaluacionService.getEvaluacionesTutorByTutorCursoId(tutor.getId());
 
         model.addAttribute("tutor", tutor);
@@ -190,9 +201,9 @@ public class TutorCursoController {
         Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        TutorCursoDTO tutor = tutorService.getTutorCursoById(usuario.getReferenceId());
+        TutorCursoDTO tutor = tutorService.findById(usuario.getReferenceId());
         
-        // Obtener tutores de prácticas de sus alumnos
+        // Obtener IDs de tutores de prácticas de sus alumnos
         List<AlumnoDTO> alumnos = alumnoService.getAlumnosByTutorCurso(tutor.getId());
         List<Long> tutorPracticasIds = alumnos.stream()
                 .filter(a -> a.getTutorPracticasId() != null)
@@ -225,15 +236,24 @@ public class TutorCursoController {
         if (result.hasErrors()) {
             Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-            TutorCursoDTO tutor = tutorService.getTutorCursoById(usuario.getReferenceId());
+            TutorCursoDTO tutor = tutorService.findById(usuario.getReferenceId());
+
+            // Es necesario volver a cargar los IDs de tutores de prácticas en caso de error de validación
+            List<AlumnoDTO> alumnos = alumnoService.getAlumnosByTutorCurso(tutor.getId());
+            List<Long> tutorPracticasIds = alumnos.stream()
+                .filter(a -> a.getTutorPracticasId() != null)
+                .map(AlumnoDTO::getTutorPracticasId)
+                .distinct()
+                .toList();
 
             model.addAttribute("tutor", tutor);
+            model.addAttribute("tutorPracticasIds", tutorPracticasIds);
             return "tutor-curso/evaluacion-tutor-form";
         }
 
         Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        TutorCursoDTO tutor = tutorService.getTutorCursoById(usuario.getReferenceId());
+        TutorCursoDTO tutor = tutorService.findById(usuario.getReferenceId());
 
         createDTO.setTutorCursoId(tutor.getId());
         evaluacionService.createEvaluacionTutor(createDTO);
@@ -252,9 +272,9 @@ public class TutorCursoController {
         Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        TutorCursoDTO tutor = tutorService.getTutorCursoById(usuario.getReferenceId());
+        TutorCursoDTO tutor = tutorService.findById(usuario.getReferenceId());
         
-        // TODO: Filtrar estadísticas solo de sus cursos
+        // TODO: Filtrar estadísticas solo de sus cursos (se mantiene el TODO)
         EstadisticasGeneralesDTO estadisticas = estadisticasService.getEstadisticasGenerales();
 
         model.addAttribute("tutor", tutor);
@@ -274,7 +294,7 @@ public class TutorCursoController {
         Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        TutorCursoDTO tutor = tutorService.getTutorCursoById(usuario.getReferenceId());
+        TutorCursoDTO tutor = tutorService.findById(usuario.getReferenceId());
         List<AlumnoDTO> alumnos = alumnoService.getAlumnosByTutorCurso(tutor.getId());
 
         model.addAttribute("tutor", tutor);
@@ -289,12 +309,12 @@ public class TutorCursoController {
      */
     @GetMapping("/reportes/alumno/{id}")
     public String reporteAlumno(@PathVariable Long id,
-                                @AuthenticationPrincipal UserDetails userDetails,
-                                Model model) {
+                                 @AuthenticationPrincipal UserDetails userDetails,
+                                 Model model) {
         Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        TutorCursoDTO tutor = tutorService.getTutorCursoById(usuario.getReferenceId());
+        TutorCursoDTO tutor = tutorService.findById(usuario.getReferenceId());
         ReporteAlumnoDTO reporte = reportsService.getReporteAlumno(id);
 
         model.addAttribute("tutor", tutor);
@@ -315,7 +335,7 @@ public class TutorCursoController {
         Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        TutorCursoDTO tutor = tutorService.getTutorCursoById(usuario.getReferenceId());
+        TutorCursoDTO tutor = tutorService.findById(usuario.getReferenceId());
         List<AlumnoDTO> alumnos = alumnoService.getAlumnosByTutorCurso(tutor.getId());
 
         return ResponseEntity.ok(alumnos);
@@ -339,11 +359,11 @@ public class TutorCursoController {
     @PostMapping("/evaluaciones-tutores/api")
     @ResponseBody
     public ResponseEntity<EvaluacionTutorDTO> createEvaluacionTutorApi(@Valid @RequestBody EvaluacionTutorCreateDTO createDTO,
-                                                                        @AuthenticationPrincipal UserDetails userDetails) {
+                                                                         @AuthenticationPrincipal UserDetails userDetails) {
         Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        TutorCursoDTO tutor = tutorService.getTutorCursoById(usuario.getReferenceId());
+        TutorCursoDTO tutor = tutorService.findById(usuario.getReferenceId());
         createDTO.setTutorCursoId(tutor.getId());
 
         EvaluacionTutorDTO evaluacion = evaluacionService.createEvaluacionTutor(createDTO);

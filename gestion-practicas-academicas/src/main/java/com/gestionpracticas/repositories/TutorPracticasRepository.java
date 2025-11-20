@@ -2,6 +2,7 @@ package com.gestionpracticas.repositories;
 
 import com.gestionpracticas.models.TutorPracticas;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor; // <--- NUEVA IMPORTACIÓN
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -10,11 +11,17 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface TutorPracticasRepository extends JpaRepository<TutorPracticas, Long> {
+// Importante: Se añade JpaSpecificationExecutor<TutorPracticas>
+public interface TutorPracticasRepository extends JpaRepository<TutorPracticas, Long>, JpaSpecificationExecutor<TutorPracticas> {
 
     Optional<TutorPracticas> findByDni(String dni);
     Optional<TutorPracticas> findByEmail(String email);
     List<TutorPracticas> findByActivo(Boolean activo);
+
+    /**
+     * Nuevo método: Encuentra todos los tutores asociados a una empresa por su ID.
+     */
+    List<TutorPracticas> findByEmpresa_Id(Long empresaId);
 
     /**
      * Verifica si existen alumnos asignados a este tutor.

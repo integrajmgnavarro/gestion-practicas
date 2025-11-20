@@ -190,7 +190,7 @@ public class AdminCursoController {
     private void cargarTutoresCurso(Model model) {
         try {
             // Ahora utilizamos el servicio especializado TutorCursoService
-            List<TutorCursoDTO> tutoresCurso = tutorCursoService.getAllTutoresCurso(); 
+            List<TutorCursoDTO> tutoresCurso = tutorCursoService.findAllList(); 
             model.addAttribute("tutoresCurso", tutoresCurso);
         } catch (Exception e) {
             model.addAttribute("errorTutores", "No se pudo cargar la lista de Tutores de Curso. Asegúrese de que TutorCursoService está operativo.");

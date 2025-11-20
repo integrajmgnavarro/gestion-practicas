@@ -10,9 +10,15 @@ import com.gestionpracticas.models.TutorPracticas;
 import com.gestionpracticas.repositories.EmpresaRepository;
 import com.gestionpracticas.repositories.TutorPracticasRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.criteria.Predicate;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,129 +34,184 @@ public class TutorPracticasService {
     // ==========================================================
     
     /**
-     * Convierte la entidad TutorPracticas a un DTO de actualización para precargar formularios.
-     * Se asume que TutorPracticasUpdateDTO tiene los campos de ID necesarios.
+     * Convierte la entidad TutorPracticas a su DTO de actualización.
      */
-    public static TutorPracticasUpdateDTO toUpdateDTO(TutorPracticas tutor) {
-        TutorPracticasUpdateDTO dto = new TutorPracticasUpdateDTO();
-        dto.setId(tutor.getId());
-        dto.setNombre(tutor.getNombre());
-        dto.setApellidos(tutor.getApellidos());
-        dto.setDni(tutor.getDni());
-        dto.setEmail(tutor.getEmail());
-        dto.setTelefono(tutor.getTelefono());
+    public TutorPracticasUpdateDTO convertToUpdateDTO(TutorPracticas tutor) {
+        TutorPracticasUpdateDTO updateDTO = new TutorPracticasUpdateDTO();
+        updateDTO.setId(tutor.getId());
+        updateDTO.setNombre(tutor.getNombre());
+        updateDTO.setApellidos(tutor.getApellidos());
+        updateDTO.setDni(tutor.getDni());
+        updateDTO.setEmail(tutor.getEmail());
+        updateDTO.setTelefono(tutor.getTelefono());
+        updateDTO.setCargo(tutor.getCargo());
+        updateDTO.setHorario(tutor.getHorario());
         
-        // --- ATRIBUTOS ADICIONALES DE LA ENTIDAD ---
-        dto.setCargo(tutor.getCargo());
-        dto.setHorario(tutor.getHorario());
-
-        // Relación (Asignar ID de Empresa)
+        // CORRECCIÓN (Línea 50): Cambiado isActivo() a getActivo()
+        // Resuelve: The method isActivo() is undefined for the type TutorPracticas
+        updateDTO.setActivo(tutor.getActivo()); 
+        
         if (tutor.getEmpresa() != null) {
-            dto.setEmpresaId(tutor.getEmpresa().getId());
+            updateDTO.setEmpresaId(tutor.getEmpresa().getId());
         }
-        return dto;
+        return updateDTO;
     }
-
+    
     // ==========================================================
-    // --- LÓGICA DE NEGOCIO: CRUD BÁSICO ---
+    // --- LÓGICA DE BÚSQUEDA Y LISTADO ---
     // ==========================================================
 
+    /**
+     * Busca tutores de prácticas aplicando filtros y paginación.
+     */
+    @Transactional(readOnly = true)
+    public Page<TutorPracticasDTO> findTutoresByFilters(
+            String nombre, String apellidos, String dni, Boolean activo, Pageable pageable) {
+
+        // 1. Crear la especificación dinámica
+        Specification<TutorPracticas> spec = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // Filtro por Nombre (case-insensitive, like)
+            if (nombre != null && !nombre.trim().isEmpty()) {
+                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("nombre")), "%" + nombre.toLowerCase() + "%"));
+            }
+            // Filtro por Apellidos (case-insensitive, like)
+            if (apellidos != null && !apellidos.trim().isEmpty()) {
+                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("apellidos")), "%" + apellidos.toLowerCase() + "%"));
+            }
+            // Filtro por DNI (case-insensitive, like)
+            if (dni != null && !dni.trim().isEmpty()) {
+                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("dni")), "%" + dni.toLowerCase() + "%"));
+            }
+            // Filtro por Estado Activo
+            if (activo != null) {
+                predicates.add(criteriaBuilder.equal(root.get("activo"), activo));
+            }
+
+            // Combinar todos los predicados con AND
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        // 2. Ejecutar la consulta con la especificación y la paginación
+        Page<TutorPracticas> tutorPage = tutorPracticasRepository.findAll(spec, pageable);
+
+        // 3. Mapear la página de entidades a una página de DTOs
+        return tutorPage.map(this::convertToDTO);
+    }
+    
+    /**
+     * Obtiene todos los tutores de prácticas activos (útil para dropdowns, etc.).
+     */
     @Transactional(readOnly = true)
     public List<TutorPracticasDTO> getAllTutoresPracticas() {
-        return tutorPracticasRepository.findAll().stream()
+        // CORRECCIÓN (Línea 112): Usamos findByActivo(Boolean.TRUE) en lugar de findAllByActivoTrue()
+        // Resuelve: The method findAllByActivoTrue() is undefined
+        return tutorPracticasRepository.findByActivo(Boolean.TRUE).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
-    
-    // Método para obtener la Entidad (necesario para el Controller de Edición)
-    @Transactional(readOnly = true)
-    public TutorPracticas getTutorPracticasEntityById(Long id) {
-        return tutorPracticasRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Tutor de Prácticas no encontrado con id: " + id));
-    }
-    
+
+    /**
+     * Obtiene un Tutor de Prácticas por su ID.
+     */
     @Transactional(readOnly = true)
     public TutorPracticasDTO getTutorPracticasById(Long id) {
-        TutorPracticas tutor = getTutorPracticasEntityById(id);
+        TutorPracticas tutor = tutorPracticasRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tutor de Prácticas no encontrado con ID: " + id));
         return convertToDTO(tutor);
     }
-    
+
+    // ==========================================================
+    // --- LÓGICA DE CREACIÓN ---
+    // ==========================================================
+
+    /**
+     * Crea un nuevo Tutor de Prácticas.
+     */
     @Transactional
     public TutorPracticasDTO createTutorPracticas(TutorPracticasCreateDTO createDTO) {
-        validarDatosUnicos(createDTO.getDni(), createDTO.getEmail(), null);
-        
+        checkDuplicateDniAndEmail(null, createDTO.getDni(), createDTO.getEmail());
+
+        Empresa empresa = empresaRepository.findById(createDTO.getEmpresaId())
+                .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada con ID: " + createDTO.getEmpresaId()));
+
         TutorPracticas tutor = new TutorPracticas();
+        // Asignación de campos
         tutor.setNombre(createDTO.getNombre());
         tutor.setApellidos(createDTO.getApellidos());
         tutor.setDni(createDTO.getDni());
         tutor.setEmail(createDTO.getEmail());
         tutor.setTelefono(createDTO.getTelefono());
-        
-        // --- ASIGNACIÓN DE CARGO Y HORARIO ---
         tutor.setCargo(createDTO.getCargo());
         tutor.setHorario(createDTO.getHorario());
-        
-        tutor.setActivo(true);
-
-        // Relación con Empresa (Obligatoria o al menos debe existir)
-        Empresa empresa = empresaRepository.findById(createDTO.getEmpresaId())
-                .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada con ID: " + createDTO.getEmpresaId()));
+        tutor.setActivo(Boolean.TRUE); // Nuevo tutor siempre activo
         tutor.setEmpresa(empresa);
 
         TutorPracticas savedTutor = tutorPracticasRepository.save(tutor);
         return convertToDTO(savedTutor);
     }
+
+    // ==========================================================
+    // --- LÓGICA DE ACTUALIZACIÓN ---
+    // ==========================================================
     
+    /**
+     * Actualiza un Tutor de Prácticas existente.
+     */
     @Transactional
-    public TutorPracticasDTO updateTutorPracticas(TutorPracticasUpdateDTO updateDTO) {
-        TutorPracticas tutor = getTutorPracticasEntityById(updateDTO.getId());
+    public TutorPracticasDTO updateTutorPracticas(Long id, TutorPracticasUpdateDTO updateDTO) {
+        TutorPracticas existingTutor = tutorPracticasRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tutor de Prácticas no encontrado con ID: " + id));
+
+        checkDuplicateDniAndEmail(id, updateDTO.getDni(), updateDTO.getEmail());
         
-        validarDatosUnicos(updateDTO.getDni(), updateDTO.getEmail(), updateDTO.getId());
-        
-        tutor.setNombre(updateDTO.getNombre());
-        tutor.setApellidos(updateDTO.getApellidos());
-        tutor.setDni(updateDTO.getDni());
-        tutor.setEmail(updateDTO.getEmail());
-        tutor.setTelefono(updateDTO.getTelefono());
-        
-        // --- ACTUALIZACIÓN DE CARGO Y HORARIO ---
-        tutor.setCargo(updateDTO.getCargo());
-        tutor.setHorario(updateDTO.getHorario());
-        
-        // Actualizar Relación con Empresa
         Empresa empresa = empresaRepository.findById(updateDTO.getEmpresaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada con ID: " + updateDTO.getEmpresaId()));
-        tutor.setEmpresa(empresa);
+
+        // Actualización de campos
+        existingTutor.setNombre(updateDTO.getNombre());
+        existingTutor.setApellidos(updateDTO.getApellidos());
+        existingTutor.setDni(updateDTO.getDni());
+        existingTutor.setEmail(updateDTO.getEmail());
+        existingTutor.setTelefono(updateDTO.getTelefono());
+        existingTutor.setCargo(updateDTO.getCargo());
+        existingTutor.setHorario(updateDTO.getHorario());
         
-        TutorPracticas updatedTutor = tutorPracticasRepository.save(tutor);
+        // CORRECCIÓN (Línea 182): Cambiado isActivo() a getActivo() del DTO
+        // Resuelve: The method isActivo() is undefined for the type TutorPracticasUpdateDTO
+        existingTutor.setActivo(updateDTO.getActivo()); 
+        
+        existingTutor.setEmpresa(empresa);
+
+        TutorPracticas updatedTutor = tutorPracticasRepository.save(existingTutor);
         return convertToDTO(updatedTutor);
     }
+
+    // ==========================================================
+    // --- LÓGICA DE ELIMINACIÓN ---
+    // ==========================================================
     
+    /**
+     * Elimina un Tutor de Prácticas.
+     */
     @Transactional
     public void deleteTutorPracticas(Long id) {
-        if (!tutorPracticasRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Tutor de Prácticas no encontrado para eliminar con ID: " + id);
-        }
-        tutorPracticasRepository.deleteById(id);
-    }
-    
-    // ==========================================================
-    // --- MÉTODOS AUXILIARES ---
-    // ==========================================================
-    
-    private void validarDatosUnicos(String dni, String email, Long tutorId) {
-        tutorPracticasRepository.findByDni(dni).ifPresent(t -> {
-            if (tutorId == null || !t.getId().equals(tutorId)) {
-                throw new DuplicateResourceException("Ya existe un Tutor de Prácticas con el DNI: " + dni);
-            }
-        });
-        tutorPracticasRepository.findByEmail(email).ifPresent(t -> {
-            if (tutorId == null || !t.getId().equals(tutorId)) {
-                throw new DuplicateResourceException("Ya existe un Tutor de Prácticas con el email: " + email);
-            }
-        });
+        TutorPracticas tutor = tutorPracticasRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tutor de Prácticas no encontrado con ID: " + id));
+        
+        // Aquí se podría añadir lógica de negocio para evitar eliminación si tiene prácticas asociadas
+        // if (tutor.getPracticas().size() > 0) {
+        //     throw new BusinessException("No se puede eliminar el tutor, tiene prácticas asociadas.");
+        // }
+        
+        tutorPracticasRepository.delete(tutor);
     }
 
+    // ==========================================================
+    // --- MÉTODOS PRIVADOS DE UTILIDAD ---
+    // ==========================================================
+    
     /**
      * Mapea la entidad TutorPracticas a su DTO de respuesta.
      */
@@ -169,12 +230,29 @@ public class TutorPracticasService {
         
         // Asignamos el nombre de la empresa
         if (tutor.getEmpresa() != null) {
-            dto.setEmpresaId(tutor.getEmpresa().getId());
             dto.setEmpresaNombre(tutor.getEmpresa().getNombre());
         }
         
-        dto.setActivo(tutor.getActivo());
-        dto.setFechaCreacion(tutor.getFechaCreacion());
+        // CORRECCIÓN (Línea 234): Cambiado isActivo() a getActivo()
+        // Resuelve: The method isActivo() is undefined for the type TutorPracticas
+        dto.setActivo(tutor.getActivo()); 
+        
         return dto;
+    }
+
+    /**
+     * Verifica la unicidad de DNI y Email.
+     */
+    private void checkDuplicateDniAndEmail(Long tutorId, String dni, String email) {
+        tutorPracticasRepository.findByDni(dni).ifPresent(t -> {
+            if (tutorId == null || !t.getId().equals(tutorId)) {
+                throw new DuplicateResourceException("Ya existe un Tutor de Prácticas con el DNI: " + dni);
+            }
+        });
+        tutorPracticasRepository.findByEmail(email).ifPresent(t -> {
+            if (tutorId == null || !t.getId().equals(tutorId)) {
+                throw new DuplicateResourceException("Ya existe un Tutor de Prácticas con el email: " + email);
+            }
+        });
     }
 }

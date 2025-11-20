@@ -18,12 +18,15 @@ public class TutorPracticasDTO {
     private String telefono;
     
     // Atributos de la entidad TutorPracticas
-    private String cargo;   // <-- Campo añadido
-    private String horario; // <-- Campo añadido
+    private String cargo;    // 
+    private String horario; // 
 
     // Relación con Empresa
     private Long empresaId;
     private String empresaNombre; // Para la visualización
+
+    // NUEVO CAMPO: Cuenta de alumnos asignados para mostrar en la tabla
+    private Integer alumnosAsignados;
 
     // Metadatos
     private Boolean activo;

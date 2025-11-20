@@ -57,4 +57,5 @@ public class AlumnoCreateDTO {
     private LocalDate fechaFin;
 
     private Boolean contratado = false;
+    private Boolean activo = true;
 }

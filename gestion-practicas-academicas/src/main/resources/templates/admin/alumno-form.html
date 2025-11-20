@@ -1,146 +1,215 @@
 <!DOCTYPE html>
-
-<html xmlns:th="http://www.thymeleaf.org"
-xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-layout:decorate="~{common/layout}">
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
-<!-- Título Dinámico: Adapta el título si tiene ID (Editar) o no (Nuevo) -->
-<title th:text="${alumno.id != null ? 'Editar Alumno: ' + alumno.nombre : 'Nuevo Alumno'}">Formulario de Alumno</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<th:block layout:fragment="extra-css"></th:block>
+    <meta charset="UTF-8">
+    <title th:text="${isEdit} ? 'Editar Alumno' : 'Crear Nuevo Alumno'">Título del Formulario</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos básicos para el formulario */
+        .container-form { max-width: 800px; margin: 2rem auto; padding: 1.5rem; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+        .form-group label { font-weight: 600; }
+        .form-group input, .form-group select { width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; transition: border-color 0.15s ease-in-out; }
+        .error-message { color: #e53e3e; font-size: 0.875rem; margin-top: 0.25rem; }
+    </style>
 </head>
-<body>
-<div layout:fragment="content" class="p-4 md:p-8">
+<body class="bg-gray-100 font-sans antialiased">
 
-<!-- ENCABEZADO DINÁMICO -->
-<div class="bg-white p-6 rounded-xl shadow-xl mb-6 border-t-4 border-blue-600">
-    <h1 class="text-3xl font-extrabold text-gray-900 mb-1">
-        <i class="bi bi-person-circle text-blue-600 mr-2"></i>
-        <span th:text="${alumno.id != null ? 'Editar Alumno' : 'Registrar Nuevo Alumno'}">Título</span>
-    </h1>
-    <p class="text-gray-500 text-sm" 
-       th:text="${alumno.id != null ? 'Modifica los datos del alumno con ID: ' + alumno.id : 'Completa los campos para dar de alta un nuevo alumno.'}">
-       Descripción dinámica
-    </p>
-</div>
+    <div class="container-form">
+        <h1 class="text-3xl font-bold mb-6 text-gray-800 border-b pb-2" 
+            th:text="${isEdit} ? 'Editar Datos del Alumno' : 'Crear Nuevo Alumno'">Encabezado</h1>
 
-<div class="bg-white shadow-xl rounded-xl p-6">
-    
-    <!-- FORMULARIO UNIFICADO: La acción es la misma, el ID oculto indica si es edición -->
-    <form th:action="@{/admin/alumnos/guardar}" th:object="${alumno}" method="post">
+        <!-- 
+            ========================================================================
+            BLOQUES DE FORMULARIO CONDICIONALES PARA EVITAR EL ERROR EL1008E
+            Hemos separado los formularios de Creación y Edición para que Thymeleaf
+            solo procese la URL y el campo ID que son relevantes para el DTO actual.
+            ========================================================================
+        -->
+
+        <!-- 1. Formulario de EDICIÓN (isEdit == true) -->
+        <form th:if="${isEdit}"
+              th:action="@{/admin/alumnos/{id}/editar(id=${alumno.id})}" 
+              th:object="${alumno}" 
+              method="post">
+            
+            <!-- Campo oculto ID (Necesario solo en edición) -->
+            <input type="hidden" th:field="*{id}" />
+            
+            <!-- Fragmento de Contenido del Formulario (th:insert simula un fragmento para evitar duplicación) -->
+            <div th:replace="~{::formContent}"></div>
+
+            <!-- Botón de Acción para EDICIÓN -->
+            <div class="md:col-span-2 flex justify-end space-x-4 mt-8">
+                <a th:href="@{/admin/alumnos}" class="px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg shadow-md hover:bg-gray-600 transition duration-150">Cancelar</a>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-150">
+                    Guardar Cambios
+                </button>
+            </div>
+        </form>
+
+        <!-- 2. Formulario de CREACIÓN (isEdit == false) -->
+        <form th:if="${!isEdit}"
+              th:action="@{/admin/alumnos/nuevo}" 
+              th:object="${alumno}" 
+              method="post">
+            
+            <!-- Fragmento de Contenido del Formulario -->
+            <div th:replace="~{::formContent}"></div>
+
+            <!-- Botón de Acción para CREACIÓN -->
+            <div class="md:col-span-2 flex justify-end space-x-4 mt-8">
+                <a th:href="@{/admin/alumnos}" class="px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg shadow-md hover:bg-gray-600 transition duration-150">Cancelar</a>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-150">
+                    Crear Alumno
+                </button>
+            </div>
+        </form>
         
-        <!-- ID Oculto (CRUCIAL para diferenciar Edición de Creación) -->
-        <input type="hidden" th:field="*{id}" />
+        <!-- 
+            ========================================================================
+            BLOQUE DE CONTENIDO COMPARTIDO DEL FORMULARIO
+            Contiene todos los campos que son comunes a AlumnoCreateDTO y AlumnoUpdateDTO.
+            ========================================================================
+        -->
+        <div th:fragment="formContent">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Seccion 1: Datos Personales Obligatorios -->
+                <div class="md:col-span-2 text-xl font-semibold mt-4 mb-2 border-b pb-1">Datos Personales</div>
 
-        <h2 class="text-xl font-semibold text-gray-800 border-b pb-2 mb-4"><i class="bi bi-person-fill text-blue-500 mr-2"></i>Datos Personales</h2>
+                <!-- Nombre -->
+                <div class="form-group">
+                    <label for="nombre" class="block mb-1">Nombre</label>
+                    <input type="text" id="nombre" th:field="*{nombre}" class="focus:border-blue-500 rounded-lg" />
+                    <span th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}" class="error-message">Error Nombre</span>
+                </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-            
-            <!-- Campo Nombre -->
-            <div>
-                <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre</label>
-                <input type="text" id="nombre" th:field="*{nombre}" required
-                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2.5"
-                       placeholder="Ej: Juan">
-                <p th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}" class="mt-1 text-sm text-red-600"></p>
-            </div>
+                <!-- Apellidos -->
+                <div class="form-group">
+                    <label for="apellidos" class="block mb-1">Apellidos</label>
+                    <input type="text" id="apellidos" th:field="*{apellidos}" class="focus:border-blue-500 rounded-lg" />
+                    <span th:if="${#fields.hasErrors('apellidos')}" th:errors="*{apellidos}" class="error-message">Error Apellidos</span>
+                </div>
 
-            <!-- Campo Apellidos -->
-            <div>
-                <label for="apellidos" class="block text-sm font-medium text-gray-700">Apellidos</label>
-                <input type="text" id="apellidos" th:field="*{apellidos}" required
-                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2.5"
-                       placeholder="Ej: Pérez García">
-                <p th:if="${#fields.hasErrors('apellidos')}" th:errors="*{apellidos}" class="mt-1 text-sm text-red-600"></p>
-            </div>
+                <!-- DNI -->
+                <div class="form-group">
+                    <label for="dni" class="block mb-1">DNI</label>
+                    <input type="text" id="dni" th:field="*{dni}" class="focus:border-blue-500 rounded-lg" />
+                    <span th:if="${#fields.hasErrors('dni')}" th:errors="*{dni}" class="error-message">Error DNI</span>
+                </div>
 
-            <!-- Campo DNI -->
-            <div>
-                <label for="dni" class="block text-sm font-medium text-gray-700">DNI</label>
-                <input type="text" id="dni" th:field="*{dni}" required
-                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2.5"
-                       placeholder="Ej: 12345678A">
-                <p th:if="${#fields.hasErrors('dni')}" th:errors="*{dni}" class="mt-1 text-sm text-red-600"></p>
-            </div>
-            
-            <!-- Campo Email -->
-            <div>
-                <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                <input type="email" id="email" th:field="*{email}" required
-                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2.5"
-                       placeholder="Ej: juan.perez@email.com">
-                <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="mt-1 text-sm text-red-600"></p>
+                <!-- Fecha Nacimiento -->
+                <div class="form-group">
+                    <label for="fechaNacimiento" class="block mb-1">Fecha de Nacimiento</label>
+                    <input type="date" id="fechaNacimiento" th:field="*{fechaNacimiento}" class="focus:border-blue-500 rounded-lg" />
+                    <span th:if="${#fields.hasErrors('fechaNacimiento')}" th:errors="*{fechaNacimiento}" class="error-message">Error Fecha Nacimiento</span>
+                </div>
+
+                <!-- Email -->
+                <div class="form-group">
+                    <label for="email" class="block mb-1">Email</label>
+                    <input type="email" id="email" th:field="*{email}" class="focus:border-blue-500 rounded-lg" />
+                    <span th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="error-message">Error Email</span>
+                </div>
+
+                <!-- Teléfono -->
+                <div class="form-group">
+                    <label for="telefono" class="block mb-1">Teléfono</label>
+                    <input type="text" id="telefono" th:field="*{telefono}" class="focus:border-blue-500 rounded-lg" />
+                    <span th:if="${#fields.hasErrors('telefono')}" th:errors="*{telefono}" class="error-message">Error Teléfono</span>
+                </div>
+
+                <!-- Seccion 2: Relaciones y Estado -->
+                <div class="md:col-span-2 text-xl font-semibold mt-4 mb-2 border-b pb-1">Relaciones y Estado</div>
+
+                <!-- CURSO (ID) -->
+                <div class="form-group">
+                    <label for="cursoId" class="block mb-1">Curso Asignado</label>
+                    <select id="cursoId" th:field="*{cursoId}" class="focus:border-blue-500 rounded-lg">
+                        <option value="">Seleccione un Curso</option>
+                        <option th:each="curso : ${cursos}" 
+                                th:value="${curso.id}" 
+                                th:text="${curso.nombre}">Nombre del Curso</option>
+                    </select>
+                    <span th:if="${#fields.hasErrors('cursoId')}" th:errors="*{cursoId}" class="error-message">Error Curso</span>
+                </div>
+
+                <!-- TUTOR DE CURSO (ID) -->
+                <div class="form-group">
+                    <label for="tutorCursoId" class="block mb-1">Tutor de Curso</label>
+                    <select id="tutorCursoId" th:field="*{tutorCursoId}" class="focus:border-blue-500 rounded-lg">
+                        <option value="">(Opcional) Seleccione un Tutor</option>
+                        <option th:each="tutor : ${tutoresCurso}" 
+                                th:value="${tutor.id}" 
+                                th:text="${tutor.nombre} + ' ' + ${tutor.apellidos}">Nombre del Tutor de Curso</option>
+                    </select>
+                </div>
+
+                <!-- EMPRESA (ID) -->
+                <div class="form-group">
+                    <label for="empresaId" class="block mb-1">Empresa de Prácticas</label>
+                    <select id="empresaId" th:field="*{empresaId}" class="focus:border-blue-500 rounded-lg">
+                        <option value="">(Opcional) Seleccione una Empresa</option>
+                        <option th:each="empresa : ${empresas}" 
+                                th:value="${empresa.id}" 
+                                th:text="${empresa.nombre}">Nombre de la Empresa</option>
+                    </select>
+                </div>
+
+                <!-- TUTOR DE PRÁCTICAS (ID) -->
+                <div class="form-group">
+                    <label for="tutorPracticasId" class="block mb-1">Tutor de Prácticas</label>
+                    <select id="tutorPracticasId" th:field="*{tutorPracticasId}" class="focus:border-blue-500 rounded-lg">
+                        <option value="">(Opcional) Seleccione un Tutor de Prácticas</option>
+                        <option th:each="tutor : ${tutoresPracticas}" 
+                                th:value="${tutor.id}" 
+                                th:text="${tutor.nombre} + ' ' + ${tutor.apellidos}">Nombre del Tutor de Prácticas</option>
+                    </select>
+                </div>
+                
+                <!-- Activo (Checkbox) -->
+                <div class="form-group flex items-center mt-2">
+                    <input type="checkbox" id="activo" th:field="*{activo}" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mr-2" />
+                    <label for="activo" class="text-sm">Activo</label>
+                </div>
+
+                <!-- Contratado (Checkbox) -->
+                <div class="form-group flex items-center mt-2">
+                    <input type="checkbox" id="contratado" th:field="*{contratado}" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mr-2" />
+                    <label for="contratado" class="text-sm">Contratado</label>
+                </div>
+
+
+                <!-- Seccion 3: Datos de Prácticas (Opcionales) -->
+                <div class="md:col-span-2 text-xl font-semibold mt-4 mb-2 border-b pb-1">Datos de Prácticas</div>
+
+                <!-- Duración Prácticas (en horas o semanas, según tu lógica) -->
+                <div class="form-group">
+                    <label for="duracionPracticas" class="block mb-1">Duración Prácticas</label>
+                    <input type="number" id="duracionPracticas" th:field="*{duracionPracticas}" class="focus:border-blue-500 rounded-lg" placeholder="Ej: 300 horas" />
+                </div>
+
+                <!-- Horario -->
+                <div class="form-group">
+                    <label for="horario" class="block mb-1">Horario</label>
+                    <input type="text" id="horario" th:field="*{horario}" class="focus:border-blue-500 rounded-lg" placeholder="Ej: L-V 9:00-14:00" />
+                </div>
+
+                <!-- Fecha Inicio -->
+                <div class="form-group">
+                    <label for="fechaInicio" class="block mb-1">Fecha de Inicio de Prácticas</label>
+                    <input type="date" id="fechaInicio" th:field="*{fechaInicio}" class="focus:border-blue-500 rounded-lg" />
+                </div>
+
+                <!-- Fecha Fin -->
+                <div class="form-group">
+                    <label for="fechaFin" class="block mb-1">Fecha de Fin de Prácticas</label>
+                    <input type="date" id="fechaFin" th:field="*{fechaFin}" class="focus:border-blue-500 rounded-lg" />
+                </div>
+
             </div>
         </div>
 
-        <h2 class="text-xl font-semibold text-gray-800 border-b pb-2 mt-6 mb-4"><i class="bi bi-book text-blue-500 mr-2"></i>Detalles Académicos</h2>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            
-            <!-- Campo Curso (Necesita 'cursosDisponibles' en el modelo) -->
-            <div>
-                <label for="cursoId" class="block text-sm font-medium text-gray-700">Curso Asignado</label>
-                <select id="cursoId" th:field="*{cursoId}" required
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2.5">
-                    <option value="">-- Seleccione un Curso --</option>
-                    <option th:each="curso : ${cursosDisponibles}" 
-                            th:value="${curso.id}" 
-                            th:text="${curso.nombre + ' (' + curso.codigo + ')'}">
-                        Curso de Ejemplo (C001)
-                    </option>
-                </select>
-                <p th:if="${#fields.hasErrors('cursoId')}" th:errors="*{cursoId}" class="mt-1 text-sm text-red-600"></p>
-            </div>
+    </div>
 
-            <!-- Campo Empresa (Necesita 'empresasDisponibles' en el modelo) -->
-            <div>
-                <label for="empresaId" class="block text-sm font-medium text-gray-700">Empresa de Prácticas (Opcional)</label>
-                <select id="empresaId" th:field="*{empresaId}"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2.5">
-                    <option value="">-- No Asignar Empresa --</option>
-                    <option th:each="empresa : ${empresasDisponibles}" 
-                            th:value="${empresa.id}" 
-                            th:text="${empresa.nombre + ' (' + empresa.cif + ')'}">
-                        Empresa S.L. (A12345678)
-                    </option>
-                </select>
-                <p th:if="${#fields.hasErrors('empresaId')}" th:errors="*{empresaId}" class="mt-1 text-sm text-red-600"></p>
-            </div>
-            
-            <!-- Campo Activo (Solo se muestra y es relevante en modo edición) -->
-            <div th:if="${alumno.id != null}">
-                <label for="activo" class="block text-sm font-medium text-gray-700">Estado del Alumno</label>
-                <select id="activo" th:field="*{activo}" required
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2.5">
-                    <option value="true">Activo</option>
-                    <option value="false">Inactivo</option>
-                </select>
-                <p th:if="${#fields.hasErrors('activo')}" th:errors="*{activo}" class="mt-1 text-sm text-red-600"></p>
-            </div>
-
-        </div>
-
-        <!-- BOTONES DE ACCIÓN -->
-        <div class="pt-5 border-t mt-8 flex justify-end space-x-3">
-            
-            <!-- Botón Guardar/Actualizar (Texto dinámico) -->
-            <button type="submit" 
-                    class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                <i class="bi bi-save mr-2"></i>
-                <span th:text="${alumno.id != null ? 'Actualizar Alumno' : 'Guardar Alumno'}">Guardar</span>
-            </button>
-
-            <!-- Botón Cancelar -->
-            <a th:href="@{/admin/alumnos}"
-               class="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 transition duration-150">
-                <i class="bi bi-x-circle mr-2"></i> Volver al Listado
-            </a>
-        </div>
-    </form>
-</div>
-
-
-</div>
 </body>
 </html>

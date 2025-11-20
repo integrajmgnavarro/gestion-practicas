@@ -9,14 +9,16 @@ import com.gestionpracticas.exception.ResourceNotFoundException;
 import com.gestionpracticas.services.TutorCursoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.util.List;
 
 @Controller
 @RequestMapping("/admin/tutores-curso")
@@ -26,122 +28,155 @@ public class AdminTutorCursoController {
 
     private final TutorCursoService tutorCursoService;
 
+    // ========================= GESTIÓN DE LISTADO Y BÚSQUEDA ========================= //
+
     /**
-     * Muestra la lista de todos los tutores de curso.
-     * GET /admin/tutores-curso
+     * Muestra la lista de todos los tutores de curso con paginación y filtros.
      */
     @GetMapping
-    public String listarTutores(Model model) {
-        try {
-            List<TutorCursoDTO> tutores = tutorCursoService.getAllTutoresCurso();
-            model.addAttribute("tutores", tutores);
-            return "admin/tutores-curso-list"; // Vista: admin/tutores-curso-list.html
-        } catch (Exception e) {
-            model.addAttribute("error", "Error al cargar la lista de tutores de curso.");
-            return "admin/tutores-curso-list";
-        }
+    public String listTutors(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "apellidos,asc") String sort,
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) String apellidos,
+            @RequestParam(required = false) String dni,
+            @RequestParam(required = false) String especialidad,
+            @RequestParam(required = false) Boolean activo,
+            Model model) {
+
+        String[] sortParams = sort.split(",");
+        Sort sorting = Sort.by(Sort.Direction.fromString(sortParams[1]), sortParams[0]);
+        Pageable pageable = PageRequest.of(page, size, sorting);
+
+        Page<TutorCursoDTO> tutoresPage = tutorCursoService.findAll(
+            nombre, 
+            apellidos, 
+            dni, 
+            especialidad, 
+            activo, 
+            pageable
+        ); 
+
+        model.addAttribute("tutoresPage", tutoresPage);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("sortField", sortParams[0]);
+        model.addAttribute("sortDirection", sortParams[1]);
+        model.addAttribute("nombre", nombre);
+        model.addAttribute("apellidos", apellidos);
+        model.addAttribute("dni", dni);
+        model.addAttribute("especialidad", especialidad);
+        model.addAttribute("activo", activo);
+        
+        return "admin/tutor-curso";
     }
 
+    // ========================= CREACIÓN ========================= //
+
     /**
-     * Muestra el formulario para crear un nuevo tutor de curso.
-     * GET /admin/tutores-curso/nuevo
+     * Muestra el formulario de creación.
      */
     @GetMapping("/nuevo")
-    public String nuevoTutorForm(Model model) {
-        model.addAttribute("tutorCreateDTO", new TutorCursoCreateDTO());
-        return "admin/tutor-curso-form"; // Vista: admin/tutor-curso-form.html
+    public String showCreateForm(Model model) {
+        if (!model.containsAttribute("tutorCursoCreateDTO")) {
+            model.addAttribute("tutorCursoCreateDTO", new TutorCursoCreateDTO());
+        }
+        return "admin/tutor-curso-form";
     }
 
     /**
-     * Procesa la creación de un nuevo tutor de curso.
-     * POST /admin/tutores-curso
+     * Procesa la creación de un nuevo tutor.
      */
-    @PostMapping
-    public String createTutor(@Valid @ModelAttribute("tutorCreateDTO") TutorCursoCreateDTO createDTO,
-                              BindingResult result,
-                              RedirectAttributes redirectAttributes) {
-
+    @PostMapping("/nuevo")
+    public String createTutor(@Valid TutorCursoCreateDTO dto, BindingResult result, RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
-            return "admin/tutor-curso-form";
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.tutorCursoCreateDTO", result);
+            redirectAttributes.addFlashAttribute("tutorCursoCreateDTO", dto);
+            return "redirect:/admin/tutores-curso/nuevo";
         }
 
         try {
-            tutorCursoService.createTutorCurso(createDTO);
-            redirectAttributes.addFlashAttribute("message", "Tutor '" + createDTO.getNombre() + " " + createDTO.getApellidos() + "' creado exitosamente.");
+            tutorCursoService.createTutorCurso(dto);
+            redirectAttributes.addFlashAttribute("message", "Tutor de Curso creado exitosamente.");
             return "redirect:/admin/tutores-curso";
         } catch (DuplicateResourceException e) {
-            // Error de DNI o Email duplicado
             manejarErroresUnicidad(e, result);
-            return "admin/tutor-curso-form";
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Error inesperado al crear el tutor.");
-            return "redirect:/admin/tutores-curso";
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.tutorCursoCreateDTO", result);
+            redirectAttributes.addFlashAttribute("tutorCursoCreateDTO", dto);
+            return "redirect:/admin/tutores-curso/nuevo";
         }
     }
 
+    // ========================= EDICIÓN (CORREGIDA) ========================= //
+
     /**
-     * Muestra el formulario para editar un tutor de curso.
-     * GET /admin/tutores-curso/{id}/editar
+     * Muestra el formulario de edición.
      */
     @GetMapping("/{id}/editar")
-    public String editarTutorForm(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
-        try {
-            TutorCursoDTO tutorDTO = tutorCursoService.getTutorCursoById(id);
-
-            // Mapeamos TutorCursoDTO a TutorCursoUpdateDTO
-            TutorCursoUpdateDTO updateDTO = new TutorCursoUpdateDTO();
-            updateDTO.setId(tutorDTO.getId());
-            updateDTO.setNombre(tutorDTO.getNombre());
-            updateDTO.setApellidos(tutorDTO.getApellidos());
-            updateDTO.setDni(tutorDTO.getDni());
-            updateDTO.setEmail(tutorDTO.getEmail());
-            updateDTO.setTelefono(tutorDTO.getTelefono());
-            updateDTO.setDepartamento(tutorDTO.getDepartamento());
-            updateDTO.setActivo(tutorDTO.getActivo());
-
-            model.addAttribute("tutorUpdateDTO", updateDTO);
-            return "admin/tutor-curso-edit-form"; // Vista: admin/tutor-curso-edit-form.html
-        } catch (ResourceNotFoundException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/admin/tutores-curso";
+    public String showEditForm(@PathVariable Long id, Model model) {
+        if (!model.containsAttribute("tutorCursoUpdateDTO")) {
+            try {
+                TutorCursoDTO tutorDTO = tutorCursoService.findById(id);
+                // Simplificamos la lógica y añadimos el DTO correcto
+                TutorCursoUpdateDTO updateDTO = mapToUpdateDTO(tutorDTO);
+                model.addAttribute("tutorCursoUpdateDTO", updateDTO);
+                
+            } catch (ResourceNotFoundException e) {
+                return "redirect:/admin/tutores-curso";
+            }
         }
+        
+        // 💥 CORRECCIÓN FINAL EN JAVA: Aseguramos que el ID esté en el modelo para el th:action
+        model.addAttribute("tutorId", id);
+        
+        return "admin/tutor-curso-edit-form";
     }
 
     /**
-     * Procesa la actualización de un tutor existente.
-     * POST /admin/tutores-curso/{id}/editar
+     * Procesa la actualización de un tutor.
      */
     @PostMapping("/{id}/editar")
-    public String updateTutor(@PathVariable Long id,
-                              @Valid @ModelAttribute("tutorUpdateDTO") TutorCursoUpdateDTO updateDTO,
-                              BindingResult result,
-                              RedirectAttributes redirectAttributes) {
+    public String updateTutor(
+            @PathVariable Long id, 
+            @Valid TutorCursoUpdateDTO dto, 
+            BindingResult result,
+            RedirectAttributes redirectAttributes,
+            Model model) {
 
-        updateDTO.setId(id); // Aseguramos que el ID de la URL sea el que se use
-
+        // Si hay errores de validación, volvemos al formulario.
         if (result.hasErrors()) {
+            model.addAttribute("tutorCursoUpdateDTO", dto);
+            // 💥 CORRECCIÓN FINAL EN JAVA: Preservar el ID en caso de error
+            model.addAttribute("tutorId", id); 
             return "admin/tutor-curso-edit-form";
         }
 
         try {
-            tutorCursoService.updateTutorCurso(id, updateDTO);
+            // Asignamos el ID del PathVariable al DTO
+            dto.setId(id);
+            
+            // Llama al servicio SOLO con el DTO
+            tutorCursoService.updateTutorCurso(dto); 
+            
             redirectAttributes.addFlashAttribute("message", "Tutor de Curso actualizado exitosamente.");
             return "redirect:/admin/tutores-curso";
         } catch (DuplicateResourceException e) {
             manejarErroresUnicidad(e, result);
+            model.addAttribute("tutorCursoUpdateDTO", dto); // Volver a pasar el DTO con errores
+            // 💥 CORRECCIÓN FINAL EN JAVA: Preservar el ID en caso de error
+            model.addAttribute("tutorId", id); 
             return "admin/tutor-curso-edit-form";
         } catch (ResourceNotFoundException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/admin/tutores-curso";
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Error inesperado al actualizar el tutor.");
-            return "redirect:/admin/tutores-curso";
         }
     }
 
+
+    // ========================= ELIMINACIÓN ========================= //
+
     /**
-     * Elimina un tutor.
-     * POST /admin/tutores-curso/{id}/eliminar
+     * Procesa la eliminación de un tutor.
      */
     @PostMapping("/{id}/eliminar")
     public String deleteTutor(@PathVariable Long id, RedirectAttributes redirectAttributes) {
@@ -151,13 +186,15 @@ public class AdminTutorCursoController {
         } catch (ResourceNotFoundException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         } catch (BusinessException e) {
-            // Captura el error de integridad (alumnos o cursos asignados)
+            // Atrapa errores de negocio específicos (ej. si el tutor tiene cursos o alumnos asignados)
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         } catch (Exception e) {
+            System.err.println("Error al eliminar el tutor: " + e.getMessage());
             redirectAttributes.addFlashAttribute("error", "Error inesperado al eliminar el tutor.");
         }
         return "redirect:/admin/tutores-curso";
     }
+
 
     // ========================= MÉTODOS PRIVADOS DE UTILIDAD ========================= //
 
@@ -168,10 +205,27 @@ public class AdminTutorCursoController {
         String message = e.getMessage();
         if (message.contains("DNI")) {
             result.rejectValue("dni", "duplicate", message);
-        } else if (message.contains("Email")) {
+        } else if (message.contains("email")) {
             result.rejectValue("email", "duplicate", message);
         } else {
              result.reject("globalError", message);
         }
+    }
+
+    /**
+     * Mapea un DTO de lectura (TutorCursoDTO) a un DTO de actualización (TutorCursoUpdateDTO).
+     */
+    private TutorCursoUpdateDTO mapToUpdateDTO(TutorCursoDTO tutorDTO) {
+        TutorCursoUpdateDTO updateDTO = new TutorCursoUpdateDTO();
+        updateDTO.setId(tutorDTO.getId());
+        updateDTO.setNombre(tutorDTO.getNombre());
+        updateDTO.setApellidos(tutorDTO.getApellidos());
+        updateDTO.setDni(tutorDTO.getDni()); 
+        updateDTO.setEmail(tutorDTO.getEmail());
+        updateDTO.setTelefono(tutorDTO.getTelefono());
+        updateDTO.setEspecialidad(tutorDTO.getEspecialidad());
+        updateDTO.setActivo(tutorDTO.getActivo());
+
+        return updateDTO;
     }
 }

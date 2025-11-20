@@ -25,6 +25,8 @@ public interface IncidenciaRepository extends JpaRepository<Incidencia, Long> {
     List<Incidencia> findByAlumno_Id(Long alumnoId);
     long countByAlumnoId(Long alumnoId);
 
+    // NUEVO: Para buscar incidencias de una lista de alumnos (necesario en el servicio)
+    List<Incidencia> findByAlumno_IdIn(List<Long> alumnoIds);
 
     List<Incidencia> findByTutorPracticas(TutorPracticas tutorPracticas);
 
@@ -95,11 +97,11 @@ public interface IncidenciaRepository extends JpaRepository<Incidencia, Long> {
            "(:fechaInicio IS NULL OR i.fecha >= :fechaInicio) AND " +
            "(:fechaFin IS NULL OR i.fecha <= :fechaFin)")
     List<Incidencia> findByMultipleCriteria(
-            @Param("alumnoId") Long alumnoId,
-            @Param("tutorPracticasId") Long tutorPracticasId,
-            @Param("tipo") TipoIncidencia tipo,
-            @Param("estado") EstadoIncidencia estado,
-            @Param("fechaInicio") LocalDate fechaInicio,
-            @Param("fechaFin") LocalDate fechaFin
+             @Param("alumnoId") Long alumnoId,
+             @Param("tutorPracticasId") Long tutorPracticasId,
+             @Param("tipo") TipoIncidencia tipo,
+             @Param("estado") EstadoIncidencia estado,
+             @Param("fechaInicio") LocalDate fechaInicio,
+             @Param("fechaFin") LocalDate fechaFin
     );
 }
